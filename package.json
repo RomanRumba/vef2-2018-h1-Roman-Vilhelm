@@ -6,7 +6,11 @@
   "dependencies": {
     "csvtojson": "^1.1.9",
     "dotenv": "^5.0.0",
+    "bcrypt": "^1.0.3",
     "express": "^4.16.2",
+    "jsonwebtoken": "^8.1.1",
+    "passport": "^0.4.0",
+    "passport-jwt": "^3.0.1",
     "pg": "^7.4.1",
     "validator": "^9.4.1",
     "xss": "^0.3.7"
