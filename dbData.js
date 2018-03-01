@@ -38,6 +38,24 @@ async function getCategories() {
 }
 
 /**
+ * Does the category existss.
+ *
+ * @returns {Promise} Promise representing a boolean representing whether the category exists
+ */
+async function categoryExists(category) {
+  const client = new Client({ connectionString });
+  await client.connect();
+  const result = await client.query(`
+    SELECT id
+    FROM categories
+    WHERE id = $1`, [
+    xss(category),
+  ]);
+  await client.end();
+  return result.rowCount > 0;
+}
+
+/**
  * create a book asynchronously.
  *
  * @param {Object} book - book to create
@@ -209,6 +227,7 @@ async function updateBook(id, {
 }
 
 module.exports = {
+  categoryExists,
   createCategory,
   getCategories,
   createBook,
