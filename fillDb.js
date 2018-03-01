@@ -57,17 +57,33 @@ async function insertBooks(books) {
   await client.end();
 }
 
-async function readCSVandInsertBooks(file) {
+async function insertCategoriesAndBooks(books) {
+  const categories = books.map(i => i.category);
+  const uniqueCategories = categories.filter((x, i) => categories.indexOf(x) === i);
+
+  const client = new Client({ connectionString });
+  await client.connect();
+  for (let i = 0; i < uniqueCategories.length; i += 1) {
+    await client.query('INSERT INTO categories(id) VALUES($1)', [ // eslint-disable-line
+      uniqueCategories[i],
+    ]);
+  }
+  await client.end();
+
+  await insertBooks(books);
+}
+
+async function readCSVandInsertCategoriesAndBooks(file) {
   const rows = [];
 
   csv().fromFile(file).on('json', (data) => {
     rows.push(data);
   }).on('done', async (error) => {
     if (error) {
-      console.error('Error: ', error);
-      return null;
+      console.error('Error parsing CSV: ', error);
+      return;
     }
-    await insertBooks(rows);
+    await insertCategoriesAndBooks(rows);
   });
 }
 
@@ -79,7 +95,7 @@ async function create() {
 
   console.info('Schema created');
 
-  await readCSVandInsertBooks('./data/books.csv');
+  await readCSVandInsertCategoriesAndBooks('./data/books.csv');
 
   console.info('Data inserted');
 }

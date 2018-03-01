@@ -1,5 +1,6 @@
 DROP TABLE IF EXISTS booksRead;
 DROP TABLE IF EXISTS books;
+DROP TABLE IF EXISTS categories;
 DROP TABLE IF EXISTS users;
 
 CREATE TABLE users(
@@ -9,13 +10,16 @@ CREATE TABLE users(
 	name VARCHAR(999) NOT NULL,
 	imgPath TEXT
 );
+CREATE TABLE categories(
+	id VARCHAR(999) PRIMARY KEY
+);
 CREATE TABLE books(
 	id SERIAL PRIMARY KEY,
 	title VARCHAR(999) UNIQUE NOT NULL,
 	ISBN13 char(13) NOT NULL,
 	author VARCHAR(999),
 	description TEXT NOT NULL,
-	category VARCHAR(999) NOT NULL,
+	category VARCHAR(999) REFERENCES categories(id),
 	ISBN10 VARCHAR(999),
 	published VARCHAR(999),
 	pagecount INT,
