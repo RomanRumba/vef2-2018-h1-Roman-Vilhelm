@@ -2,7 +2,7 @@
    þetta er stand alone skjal sem á að vera keyrt einusinni */
 
 
-/* Sér um að búa til gagna grun úr schema.sql 
+/* Sér um að búa til gagna grun úr schema.sql
    og svo setja gögn i hana frá book.cvs sem er i data skjali */
 
 require('dotenv').config();
@@ -14,7 +14,7 @@ const { Client } = require('pg');
 
 const csv = require('csvtojson');
 
-const connectionString = process.env.DATABASE_URL || 'postgres://postgres:Pass.3219@localhost:5432/vef2h1';
+const connectionString = process.env.DATABASE_URL;
 
 const readFileAsync = util.promisify(fs.readFile);
 

@@ -1,5 +1,5 @@
-/* Þegar gögn eru sótt, búin til eða uppfærð þarf að athuga hvort allt sé gilt og einingar séu til og 
-   skila viðeigandi status kóðum/villuskilaboðum ef svo er ekki. */
+/* Þegar gögn eru sótt, búin til eða uppfærð þarf að athuga hvort allt sé gilt og
+  einingar séu til og skila viðeigandi status kóðum/villuskilaboðum ef svo er ekki. */
 
 /* Fyrir notanda sem ekki er skráður er inn skal vera hægt að:
    -Skoða allar bækur og flokka
@@ -39,7 +39,7 @@
 /* /users/me/profile
      -POST setur eða uppfærir mynd fyrir notanda í gegnum Cloudinary og skilar slóð
       með mynd (.png, .jpg eða .jpeg) í body á request.
-      Þar sem ekki er hægt að vista myndir beint á disk á Heroku skal notast við Cloudinary 
+      Þar sem ekki er hægt að vista myndir beint á disk á Heroku skal notast við Cloudinary
 
      Flæði væri:
         Notandi sendir multipart/form-data POST á /users/me/profile með mynd

@@ -1,7 +1,9 @@
 const { Client } = require('pg');
 const xss = require('xss');
 
-const connectionString = process.env.DATABASE_URL || 'postgres://postgres:Pass.3219@localhost:5432/vef2h1';
+const connectionString = process.env.DATABASE_URL;
+
+// books
 
 /**
  * create a category asynchronously.
@@ -104,22 +106,23 @@ async function createBook({
 
 /**
  * Read all books.
- * 
+ *
  * @param {int} offset -offset for query
  * @param {int} limit - limit for query
  *
  * @returns {Promise} Promise representing an array of offset and limited book objects
  */
-async function getBooks(offset = 0, limit = null) {
+async function getBooks(offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
-    SELECT title,author,description,isbn10,isbn13,published,pagecount,language,category 
+    SELECT id, title, author, description, isbn10, isbn13, published, pagecount, language, category 
     FROM books
+    ORDER BY id
     OFFSET $1
     LIMIT $2`, [
-    offset,
-    limit,
+    xss(offset),
+    xss(limit),
   ]);
   await client.end();
   return result.rows;
@@ -133,22 +136,25 @@ async function getBooks(offset = 0, limit = null) {
  *
  * @returns {Promise} Promise representing an array of offset and limited book objects
  */
-async function bookSearch(search, offset = 0, limit = null) {
+async function bookSearch(search, offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
-    SELECT title,author,description,isbn10,isbn13,published,pagecount,language,category 
+    SELECT id,title,author,description,isbn10,isbn13,published,pagecount,language,category 
     FROM books
-    WHERE to_tsvector('english', title) @@ to_tsquery('english', '$1');
-    OFFSET $2,
+    WHERE to_tsvector('english', title) @@ to_tsquery('english', '$1')
+    OR to_tsvector('english', description) @@ to_tsquery('english', '$1')
+    ORDER BY id
+    OFFSET $2
     LIMIT $3`, [
-    search,
-    offset,
-    limit,
+    xss(search),
+    xss(offset),
+    xss(limit),
   ]);
   await client.end();
   return result.rows;
 }
+
 /**
  * get a book.
  *
@@ -160,10 +166,10 @@ async function getBook(id) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
-    SELECT title,author,description,isbn10,isbn13,published,pagecount,language,category 
+    SELECT id,title,author,description,isbn10,isbn13,published,pagecount,language,category 
     FROM books
     WHERE id = $1`, [
-    id,
+    xss(id),
   ]);
   await client.end();
   return result.rows;
@@ -173,7 +179,7 @@ async function getBook(id) {
  * update a book asynchronously.
  *
  * @param {id} id - Id of book to update
- * @param {Object} book - book to create
+ * @param {Object} book - book to update
  * @param {string} title - title of book
  * @param {string} author - author of book
  * @param {string} description - description of book
@@ -226,39 +232,8 @@ async function updateBook(id, {
   return result.rows;
 }
 
-/**
- * create a user asynchronously.
- *
- * @param {Object} user - user to create
- * @param {string} username - username of user
- * @param {string} password - password of user
- * @param {string} name - name of user
- * @param {string} imgPath - image path for user image
- *
- * @returns {Promise} Promise representing the object result of creatung the user
- */
-async function createUser({
-  username,
-  password,
-  name,
-  imgPath,
-} = {}) {
-  const client = new Client({ connectionString });
-  await client.connect();
-  const result = await client.query(`
-    INSERT INTO users(username, password, name, imgPath) 
-    VALUES($1, $2, $3, $4) 
-    RETURNING username, password, name, imgPath`, [
-    xss(username),
-    xss(password),
-    xss(name),
-    xss(imgPath),
-  ]);
-  await client.end();
-  return result.rows;
-}
-
 module.exports = {
+  // books
   categoryExists,
   createCategory,
   getCategories,
@@ -267,5 +242,4 @@ module.exports = {
   getBook,
   bookSearch,
   updateBook,
-  createUser,
 };
