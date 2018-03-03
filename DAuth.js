@@ -40,7 +40,7 @@ async function createUser({
  *
  * @returns {Promise} Promise representing a boolean representing whether the user exists
  */
-async function userExists(username) {
+async function userExists(username, password) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
@@ -49,6 +49,7 @@ async function userExists(username) {
   WHERE username = $1
   AND password = $2`, [
     xss(username),
+    xss(password),
   ]);
   await client.end();
   return result.rows > 0;
