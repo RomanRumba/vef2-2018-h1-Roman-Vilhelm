@@ -1,3 +1,5 @@
+require('dotenv').config();
+
 const { Client } = require('pg');
 const xss = require('xss');
 
@@ -35,6 +37,12 @@ async function createUser({
   return result.rows;
 }
 
+createUser({
+  username: 'uname',
+  password: 'pass',
+  name: 'nafn',
+  imgPath: '/',
+});
 /**
  * Does the user existss.
  *
