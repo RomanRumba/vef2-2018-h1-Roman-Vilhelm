@@ -123,7 +123,7 @@ router.post('/register', async (req, res) => {
     imgPath: '/',
   };
   const data = await createUser(usrInfo);
-  data[0].password = password;// spurja ernir um þetta
+  data[0].password = password;// spurja ernir
   return res.status(201).json(data);
 });
 /* þarf að sjá um að taka við tokens frá notendanum og validate þau */
