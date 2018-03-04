@@ -6,7 +6,8 @@ const passport = require('passport');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const users = require('./DAuth');
+const userDB = require('./DAuth');
+
 
 /* -------------------------------------------------
    ------------------Requires START ----------------
@@ -14,6 +15,8 @@ const users = require('./DAuth');
 
 const router = express.Router();
 
+/* Útfæra þarf middleware sem passar upp á slóðir sem eiga að vera læstar
+   séu læstar nema token sé sent með í Authorization haus í request. */
 /* Notkun : requireAuthentication(req, res, next)
    Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
              okkur aðgang að upplýsingum um HTTP request frá client.
@@ -41,6 +44,24 @@ function requireAuthentication(req, res, next) {
   ) (req, res, next);
 }
 
+/* Notkun : validateUser(username, passoword)
+   Fyrir  : username er str af lengd >= 3
+            password er str af lengd >= 6
+   Eftir  : skilar fylki af json obj sem gefa tilkynna ef
+            það var brotið reglur um username og password */
+function validateUser(username, password) {
+  const error = [];
+  // chekka ef notendanafnið er strengur og stafafjölda >= 3
+  if (typeof username !== 'string' || username.length < 3) {
+    error.push({ field: 'Username', error: 'Username has to be a string and of lenght of bigger than or equal 3' });
+  }
+  // chekka ef password er strengur og stafafjölda >= 6
+  if (typeof password !== 'string' || password.length < 6) {
+    error.push({ field: 'Password', error: 'Password has to be a string and of lenght of bigger than or equal 6' });
+  }
+  return error;
+}
+
 /* Notkun : comparePasswords(hash, password)
    Fyrir  : hash - data to compare
             passowrd - data to be compared to
@@ -50,9 +71,6 @@ async function comparePasswords(hash, password) {
   return result;
 }
 
-/* /register
-     POST býr til notanda og skilar án lykilorðs hash */
-
 /* /login
      POST með notendanafni og lykilorði skilar token */
 router.post('/login', async (req, res) => {
@@ -60,7 +78,7 @@ router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   /*  útaf öll nöfn eru einstök i gagnagruni þá er hægt
   að leita af notenda með nafni mun skila alltaf 1 eða ekkert */
-  const user = await users.userExists(username);
+  const user = await userDB.userExists(username);
   /* ef það var skilað tómu rows þá er notandanafnið ekki til
      og það er skilað json með error ásamt 401 status kóða */
   if (!user) {
@@ -80,9 +98,25 @@ router.post('/login', async (req, res) => {
   return res.status(401).json({ error: 'Invalid password' });
 });
 
-/* Útfæra þarf middleware sem passar upp á slóðir sem eiga að vera læstar
-   séu læstar nema token sé sent með í Authorization haus í request. */
-
+/* /register
+     POST býr til notanda og skilar án lykilorðs hash */
+router.post('/register', async (req, res) => {
+  const { username, password } = req.body;
+  const error = validateUser(username, password);
+  if (error !== null) {
+    return res.status(400).json(error);
+  }
+  // chekka ef notendanafnið er til
+  const user = await userDB.userExists(username);
+  if (user) {
+    return res.status(401).json({ error: 'This username is already taken please choose another one' });
+  }
+  // búum til dulkóðað password
+  const hashedPassword = await bcrypt.hash(password, 11);
+  userDB.createUser(username, hashedPassword, '', '').then((data) => {
+    return res.status(201).json(data);
+  });
+});
 /* þarf að sjá um að taka við tokens frá notendanum og validate þau */
 
 /* þarf að sjá um að gefa tokens til notendans */

@@ -3,12 +3,15 @@
    ------------------------------------------------- */
 
 require('dotenv').config();
+
 const express = require('express');
 const passport = require('passport');
 const { Strategy, ExtractJwt } = require('passport-jwt');
-// const users = require('./users');
-//const books = require('./books');
+
+const userDB = require('./DUsers');
 const auth = require('./authentication');
+// const users = require('./users');
+// const books = require('./books');
 
 /* -------------------------------------------------
    ------------------Requires END ------------------
@@ -20,10 +23,7 @@ const auth = require('./authentication');
 
 const app = express();
 app.use(express.json());
-//app.use(users);
-//app.use(books);
 app.use(auth);
-
 
 /* Stillingar fyrir vefþjón
    PORT : á hvaða porti er hlustað
@@ -38,6 +38,8 @@ const {
   // sótt úr .env skjali ef ekki skilgreind þá default 20 sem er 20 seconds
   TOKEN_LIFETIME: tokenLifetime = 20,
 } = process.env;
+
+app.use(express.urlencoded({ extended: true }));
 
 /* Ef það er ekki til dulkóðun fyrir upplýsingar þá er drept á vefþjónustuni */
 if (!jwtSecret) {
@@ -59,7 +61,7 @@ const jwtOptions = {
   /* is a string or buffer containing the secret (symmetric)
   or PEM-encoded public key (asymmetric) for verifying the token's signature */
   secretOrKey: jwtSecret,
-}
+};
 
 /* Notkun : start(data,next)
    Fyrir  : data json obj
@@ -67,7 +69,7 @@ const jwtOptions = {
    Eftir  : skilar notenda á næsta falli i middleware keðjuni ef hann er til
             annars skilað false á næsta fallið i middleware keðjuni */
 async function strat(data, next) {
-  const user = await users.findById(data.id);
+  const user = await userDB.findById(data.id);
   if (user) {
     next(null, user);
   } else {
@@ -78,7 +80,12 @@ async function strat(data, next) {
 // segjum passport að nota strat stretegiuna til að auðkenna notenda með ásamt jwtOptions stillingum
 passport.use(new Strategy(jwtOptions, strat));
 
+passport.serializeUser((user, done) => {
+  done(null, user.id);
+});
+
 app.use(passport.initialize());
+
 /* -------------------------------------------------
    ----------------- PASSPORT END-- ----------------
    ------------------------------------------------- */
