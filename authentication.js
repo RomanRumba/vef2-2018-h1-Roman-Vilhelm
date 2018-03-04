@@ -115,13 +115,12 @@ router.post('/register', async (req, res) => {
   }
   // búum til dulkóðað password
   const hashedPassword = await bcrypt.hash(password, 11);
-  const newUsrData = {
-    username,
+  createUser({
+    username: username,
     password: hashedPassword,
     name: '',
-    imgPath: '',
-  };
-  createUser(newUsrData).then((data) => { res.status(201).json(data); });
+    imgPath: '/',
+  }).then((data) => { res.status(201).json(data); });
 });
 /* þarf að sjá um að taka við tokens frá notendanum og validate þau */
 

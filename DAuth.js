@@ -16,6 +16,14 @@ const connectionString = process.env.DATABASE_URL;
  *
  * @returns {Promise} Promise representing the object result of creatung the user
  */
+/*
+createUser({
+  username: 'uname',
+  password: 'pass',
+  name: 'nafn',
+  imgPath: '/',
+});
+*/
 async function createUser({
   username,
   password,
