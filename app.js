@@ -8,8 +8,10 @@ const express = require('express');
 const passport = require('passport');
 const { Strategy, ExtractJwt } = require('passport-jwt');
 
-const userDB = require('./DUsers');
 const auth = require('./authentication');
+const {
+  getUser,
+} = require('./DAuth');
 // const users = require('./users');
 // const books = require('./books');
 
@@ -69,7 +71,7 @@ const jwtOptions = {
    Eftir  : skilar notenda á næsta falli i middleware keðjuni ef hann er til
             annars skilað false á næsta fallið i middleware keðjuni */
 async function strat(data, next) {
-  const user = await userDB.findById(data.id);
+  const user = await getUser(data.id);
   if (user) {
     next(null, user);
   } else {

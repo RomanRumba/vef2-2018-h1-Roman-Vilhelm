@@ -6,8 +6,10 @@ const passport = require('passport');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const userDB = require('./DAuth');
-
+const {
+  createUser,
+  userExists,
+} = require('./DAuth');
 
 /* -------------------------------------------------
    ------------------Requires START ----------------
@@ -78,7 +80,7 @@ router.post('/login', async (req, res) => {
   const { username, password } = req.body;
   /*  útaf öll nöfn eru einstök i gagnagruni þá er hægt
   að leita af notenda með nafni mun skila alltaf 1 eða ekkert */
-  const user = await userDB.userExists(username);
+  const user = await userExists(username);
   /* ef það var skilað tómu rows þá er notandanafnið ekki til
      og það er skilað json með error ásamt 401 status kóða */
   if (!user) {
@@ -107,15 +109,19 @@ router.post('/register', async (req, res) => {
     return res.status(400).json(error);
   }
   // chekka ef notendanafnið er til
-  const user = await userDB.userExists(username);
+  const user = await userExists(username);
   if (user) {
     return res.status(401).json({ error: 'This username is already taken please choose another one' });
   }
   // búum til dulkóðað password
   const hashedPassword = await bcrypt.hash(password, 11);
-  userDB.createUser(username, hashedPassword, '', '').then((data) => {
-    return res.status(201).json(data);
-  });
+  const newUsrData = {
+    username,
+    password: hashedPassword,
+    name: '',
+    imgPath: '',
+  };
+  createUser(newUsrData).then((data) => { res.status(201).json(data); });
 });
 /* þarf að sjá um að taka við tokens frá notendanum og validate þau */
 
