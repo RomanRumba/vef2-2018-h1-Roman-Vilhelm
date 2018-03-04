@@ -66,6 +66,26 @@ async function userExists(username) {
 }
 
 /**
+ * get a user.
+ *
+ * @param {int} username - username of user to read
+ *
+ * @returns {Promise} Promise representing an array of offset and limited user objects
+ */
+async function getUser(username) {
+  const client = new Client({ connectionString });
+  await client.connect();
+  const result = await client.query(`
+    SELECT id, username, name, imgPath 
+    FROM users
+    WHERE username = $1`, [
+    xss(username),
+  ]);
+  await client.end();
+  return result.rows;
+}
+
+/**
  * Do username and password correspond?
  *
  * @returns {Promise} Promise representing a boolean representing whether the login succeeded.
@@ -88,5 +108,6 @@ async function login(username, password) {
 module.exports = {
   createUser,
   userExists,
+  getUser,
   login,
 };
