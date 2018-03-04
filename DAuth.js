@@ -37,12 +37,6 @@ async function createUser({
   return result.rows;
 }
 
-createUser({
-  username: 'uname',
-  password: 'pass',
-  name: 'nafn',
-  imgPath: '/',
-});
 /**
  * Does the user existss.
  *
@@ -60,7 +54,7 @@ async function userExists(username) {
     xss(username),
   ]);
   await client.end();
-  return result.rows > 0;
+  return result.rowCount > 0;
 }
 
 /**
