@@ -35,7 +35,7 @@ async function createUser({
   const result = await client.query(`
     INSERT INTO users(username, password, name, imgPath) 
     VALUES($1, $2, $3, $4) 
-    RETURNING username, password, name, imgPath`, [
+    RETURNING id, username, password, name, imgPath`, [
     xss(username),
     xss(password),
     xss(name),

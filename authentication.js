@@ -100,12 +100,13 @@ router.post('/login', async (req, res) => {
   return res.status(401).json({ error: 'Invalid password' });
 });
 
+
 /* /register
      POST býr til notanda og skilar án lykilorðs hash */
 router.post('/register', async (req, res) => {
   const { username, password } = req.body;
   const error = validateUser(username, password);
-  if (error !== null) {
+  if (error.length > 0) {
     return res.status(400).json(error);
   }
   // chekka ef notendanafnið er til
@@ -115,12 +116,15 @@ router.post('/register', async (req, res) => {
   }
   // búum til dulkóðað password
   const hashedPassword = await bcrypt.hash(password, 11);
-  createUser({
-    username: username,
+  const usrInfo = {
+    username,
     password: hashedPassword,
     name: '',
     imgPath: '/',
-  }).then((data) => { res.status(201).json(data); });
+  };
+  const data = await createUser(usrInfo);
+  data[0].password = password;// spurja ernir um þetta
+  return res.status(201).json(data);
 });
 /* þarf að sjá um að taka við tokens frá notendanum og validate þau */
 
