@@ -2,23 +2,23 @@
    ------------------Requires START ----------------
    ------------------------------------------------- */
 
-const passport = require('passport');
-const bcrypt = require('bcrypt');
 const express = require('express');
+const bcrypt = require('bcrypt');
+
 const {
-  getUsers,
-  getUserById,
-  updateUser,
-  getReadBooks,
-  deleteReadBook,
-  updateImgPath,
+  // getUsers,
+  // getUserById,
+  // updateUser,
+  // getReadBooks,
+  // deleteReadBook,
+  // updateImgPath,
   createUser,
   userExists,
-  getUserByUsername,
+  // getUserByUsername,
 } = require('./DUsers');
 
 /* -------------------------------------------------
-   ------------------Requires START ----------------
+   ------------------Requires END ------------------
    ------------------------------------------------- */
 
 const router = express.Router();
@@ -67,10 +67,4 @@ router.post('/register', async (req, res) => {
   return res.status(201).json(data);
 });
 
-/* þarf að sjá um að taka við tokens frá notendanum og validate þau */
-
-/* þarf að sjá um að gefa tokens til notendans */
-
-
-/* þarf að exporta þetta er Route */
 module.exports = router;

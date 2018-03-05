@@ -8,13 +8,20 @@ const express = require('express');
 const passport = require('passport');
 const { Strategy, ExtractJwt } = require('passport-jwt');
 const jwt = require('jsonwebtoken');
-const usersAuth = require('./authentication');
 const bcrypt = require('bcrypt');
-const {
-  getUserById,
-  getUserByUsername,
-} = require('./DUsers');// sækja öll föll úr notes til að geta tala við gagnagrun
+const userAuth = require('./authentication');
 
+const {
+  // getUsers,
+  getUserById,
+  // updateUser,
+  // getReadBooks,
+  // deleteReadBook,
+  // updateImgPath,
+  // createUser,
+  // userExists,
+  getUserByUsername,
+} = require('./DUsers');
 
 /* -------------------------------------------------
    ------------------Requires END ------------------
@@ -30,7 +37,7 @@ const {
    TOKEN_LIFETIME : liftimi tókens sem notandi fær */
 const {
   PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
-  HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1 
+  HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1
   /* !!!!!!!!!! NOTICE ÞEGAR ÞAÐ ÞARF AÐ KOMA ÞESSU Á HEROKU ÞARF AÐ STILLA ÞESSA BREYTUR !!!!! */
   JWT_SECRET: jwtSecret, // sótt úr .env skali
   /* !!!!!!!!!! NOTICE ÞEGAR ÞAÐ ÞARF AÐ KOMA ÞESSU Á HEROKU ÞARF AÐ STILLA ÞESSA BREYTUR !!!!! */
@@ -46,7 +53,8 @@ if (!jwtSecret) {
 
 const app = express();
 app.use(express.json());
-app.use(usersAuth);
+app.use(userAuth);
+
 /* -------------------------------------------------
    ----------------- Init END ----------------------
    ------------------------------------------------- */
@@ -105,17 +113,16 @@ app.post('/login', async (req, res) => {
   // næ i notendanafn og lykill orð úr body
   const { username, password } = req.body;
   /*  útaf öll nöfn eru einstök i gagnagruni þá er hægt
-      að leita af notenda með nafni mun skila alltaf 1 eða ekkert */
+    að leita af notenda með nafni mun skila alltaf 1 eða ekkert */
   const user = await getUserByUsername(username);
   /* ef það var skilað tómu rows þá er notandanafnið ekki til
-    og það er skilað json með error ásamt 401 status kóða */
+      og það er skilað json með error ásamt 401 status kóða */
   if (!user) {
     return res.status(401).json({ error: 'No such user' });
   }
   /* kallað á comparePasswords sem mun auðkenna hvort passwordið sem
      sem slegið var inn er löglegt */
   const passwordIsCorrect = await comparePasswords(password, user.password);
-
   if (passwordIsCorrect) {
     const payload = { id: user.id };
     const tokenOptions = { expiresIn: tokenLifetime };
@@ -126,8 +133,7 @@ app.post('/login', async (req, res) => {
   return res.status(401).json({ error: 'Invalid password' });
 });
 
-/* Útfæra þarf middleware sem passar upp á slóðir sem eiga að vera læstar
-   séu læstar nema token sé sent með í Authorization haus í request. */
+/* þarf að sjá um að gefa tokens til notendans */
 /* Notkun : requireAuthentication(req, res, next)
    Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
              okkur aðgang að upplýsingum um HTTP request frá client.
@@ -147,7 +153,6 @@ function requireAuthentication(req, res, next) {
         const error = info.name === 'TokenExpiredError' ? 'expired token' : 'invalid token';
         return res.status(401).json({ error });
       }
-
       req.user = user;
       next();
     }) (req, res, next);
