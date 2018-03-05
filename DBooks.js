@@ -23,7 +23,7 @@ async function createCategory(name) {
     xss(name),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 /**
@@ -103,7 +103,7 @@ async function createBook({
     xss(category),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 /**
@@ -174,7 +174,7 @@ async function getBook(id) {
     xss(id),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 /**
@@ -231,11 +231,10 @@ async function updateBook(id, {
     xss(id),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 module.exports = {
-  // books
   categoryExists,
   createCategory,
   getCategories,
