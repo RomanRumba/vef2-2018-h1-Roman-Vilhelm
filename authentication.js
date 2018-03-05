@@ -56,6 +56,7 @@ router.post('/register', async (req, res) => {
   }
   // búum til dulkóðað password
   const hashedPassword = await bcrypt.hash(password, 11);
+  // svo það er hægt að vera tilbuin fyrir frammtiðina það er hægt að bæta auka
   const usrInfo = {
     username,
     password: hashedPassword,

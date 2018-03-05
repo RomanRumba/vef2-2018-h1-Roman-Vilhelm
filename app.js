@@ -42,7 +42,7 @@ const {
   JWT_SECRET: jwtSecret, // sótt úr .env skali
   /* !!!!!!!!!! NOTICE ÞEGAR ÞAÐ ÞARF AÐ KOMA ÞESSU Á HEROKU ÞARF AÐ STILLA ÞESSA BREYTUR !!!!! */
   // sótt úr .env skjali ef ekki skilgreind þá default 20 sem er 20 seconds
-  TOKEN_LIFETIME: tokenLifetime = 20,
+  TOKEN_LIFETIME: tokenLifetime = 99999999,
 } = process.env;
 
 /* Ef það er ekki til dulkóðun fyrir upplýsingar þá er drept á vefþjónustuni */
@@ -55,6 +55,17 @@ const app = express();
 app.use(express.json());
 app.use(userAuth);
 
+// valkostir sem hægt er að taka frá tótini
+app.get('/', (req, res) => {
+  res.json({
+    login: '/login',
+    admin: '/admin',
+    lookForBooks: '/books',
+    categories: '/categories',
+    specificBook: '/books/:id',
+    advancedBookSearch: '/books?search=query',
+  });
+});
 /* -------------------------------------------------
    ----------------- Init END ----------------------
    ------------------------------------------------- */
@@ -95,7 +106,7 @@ app.use(passport.initialize());
    ------------------------------------------------- */
 
 /* -------------------------------------------------
-   ------------------- LOGGIN START ----------------
+   ---------- LOGGIN Authentication START ----------
    ------------------------------------------------- */
 
 /* Notkun : comparePasswords(hash, password)
@@ -162,7 +173,7 @@ app.get('/admin', requireAuthentication, (req, res) => {
   res.json({ data: 'top secret' });
 });
 /* -------------------------------------------------
-   --------------------LOGGIN END-------------------
+   ---------- LOGGIN Authentication END  -----------
    -------------------------------------------------  */
 
 /* -------------------------------------------------
