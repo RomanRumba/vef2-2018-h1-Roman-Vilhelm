@@ -38,7 +38,9 @@ router.post('/categories', async (req, res) => {
       Þ.e.a.s. að sækja aðeins takmarkað magn úr heildarlista í einu og láta vita af næstu síðu. */
 
 router.get('/books', async (req, res) => {
-  console.log('body', req.body);
+  const { offset = 0, limit = 10 } = req.query;
+  const data = await getBooks(offset, limit);
+  res.status(200).json(data);
 });
 /* /books?search=query
      -GET skilar síðu af bókum sem uppfylla leitarskilyrði, sjá að neðan */
@@ -48,3 +50,5 @@ router.get('/books', async (req, res) => {
      -PATCH uppfærir bók */
 
 /* þarf að exporta þetta er Route */
+
+module.exports = router;

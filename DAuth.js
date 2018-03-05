@@ -82,7 +82,7 @@ async function getUser(username) {
     xss(username),
   ]);
   await client.end();
-  return result.rows[0];
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 /**
