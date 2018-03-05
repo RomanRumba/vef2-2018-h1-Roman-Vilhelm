@@ -6,14 +6,15 @@ require('dotenv').config();
 
 const express = require('express');
 const passport = require('passport');
-const bcrypt = require('bcrypt');
 const { Strategy, ExtractJwt } = require('passport-jwt');
 const jwt = require('jsonwebtoken');
+const usersAuth = require('./authentication');
+const bcrypt = require('bcrypt');
+const {
+  getUserById,
+  getUserByUsername,
+} = require('./DUsers');// sækja öll föll úr notes til að geta tala við gagnagrun
 
-const auth = require('./authentication');
-const books = require('./books');
-const userAth = require('./DAuth');
-const userDB = require('./DUsers');
 
 /* -------------------------------------------------
    ------------------Requires END ------------------
@@ -22,11 +23,6 @@ const userDB = require('./DUsers');
 /* -------------------------------------------------
    ---------------- Init START ---------------------
    ------------------------------------------------- */
-
-const app = express();
-app.use(express.json());
-app.use(auth);
-app.use(books);
 
 /* Stillingar fyrir vefþjón
    PORT : á hvaða porti er hlustað
@@ -42,14 +38,15 @@ const {
   TOKEN_LIFETIME: tokenLifetime = 20,
 } = process.env;
 
-app.use(express.urlencoded({ extended: true }));
-
 /* Ef það er ekki til dulkóðun fyrir upplýsingar þá er drept á vefþjónustuni */
 if (!jwtSecret) {
   console.error('JWT_SECRET not registered in .env');
   process.exit(1);
 }
 
+const app = express();
+app.use(express.json());
+app.use(usersAuth);
 /* -------------------------------------------------
    ----------------- Init END ----------------------
    ------------------------------------------------- */
@@ -72,8 +69,8 @@ const jwtOptions = {
    Eftir  : skilar notenda á næsta falli i middleware keðjuni ef hann er til
             annars skilað false á næsta fallið i middleware keðjuni */
 async function strat(data, next) {
-  const user = await userDB.getUser(data.id);
-  if (!user) {
+  const user = await getUserById(data.id);
+  if (user) {
     next(null, user);
   } else {
     next(null, false);
@@ -83,9 +80,7 @@ async function strat(data, next) {
 // segjum passport að nota strat stretegiuna til að auðkenna notenda með ásamt jwtOptions stillingum
 passport.use(new Strategy(jwtOptions, strat));
 
-
 app.use(passport.initialize());
-app.use(passport.session());
 
 /* -------------------------------------------------
    ----------------- PASSPORT END-- ----------------
@@ -111,7 +106,7 @@ app.post('/login', async (req, res) => {
   const { username, password } = req.body;
   /*  útaf öll nöfn eru einstök i gagnagruni þá er hægt
       að leita af notenda með nafni mun skila alltaf 1 eða ekkert */
-  const user = await userAth.getUser(username);
+  const user = await getUserByUsername(username);
   /* ef það var skilað tómu rows þá er notandanafnið ekki til
     og það er skilað json með error ásamt 401 status kóða */
   if (!user) {
@@ -131,15 +126,40 @@ app.post('/login', async (req, res) => {
   return res.status(401).json({ error: 'Invalid password' });
 });
 
+/* Útfæra þarf middleware sem passar upp á slóðir sem eiga að vera læstar
+   séu læstar nema token sé sent með í Authorization haus í request. */
+/* Notkun : requireAuthentication(req, res, next)
+   Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
+             okkur aðgang að upplýsingum um HTTP request frá client.
+            -res er skrifanlegur straumur sem sendur verður til clients.
+            -next er næsti middleware i keðjuni.
+   Eftir  : athugar hvort aðili er skráður inn ef hann er skráður inn þá er kallað
+            á næsta fall i middleware keðjuni annars það er skilað json string með villu */
+function requireAuthentication(req, res, next) {
+  return passport.authenticate(
+    'jwt',
+    { session: false },
+    (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        const error = info.name === 'TokenExpiredError' ? 'expired token' : 'invalid token';
+        return res.status(401).json({ error });
+      }
+
+      req.user = user;
+      next();
+    }) (req, res, next);
+}
+
+app.get('/admin', requireAuthentication, (req, res) => {
+  res.json({ data: 'top secret' });
+});
 /* -------------------------------------------------
    --------------------LOGGIN END-------------------
    -------------------------------------------------  */
-app.get('/', (req, res) => {
-  res.json({
-    login: '/login',
-    admin: '/admin',
-  });
-});
+
 /* -------------------------------------------------
    ------------Error Functions START----------------
    ------------------------------------------------- */

@@ -6,44 +6,22 @@ const passport = require('passport');
 const bcrypt = require('bcrypt');
 const express = require('express');
 const {
+  getUsers,
+  getUserById,
+  updateUser,
+  getReadBooks,
+  deleteReadBook,
+  updateImgPath,
   createUser,
   userExists,
-} = require('./DAuth');
+  getUserByUsername,
+} = require('./DUsers');
 
 /* -------------------------------------------------
    ------------------Requires START ----------------
    ------------------------------------------------- */
 
 const router = express.Router();
-
-/* Útfæra þarf middleware sem passar upp á slóðir sem eiga að vera læstar
-   séu læstar nema token sé sent með í Authorization haus í request. */
-/* Notkun : requireAuthentication(req, res, next)
-   Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
-             okkur aðgang að upplýsingum um HTTP request frá client.
-            -res er skrifanlegur straumur sem sendur verður til clients.
-            -next er næsti middleware i keðjuni.
-   Eftir  : athugar hvort aðili er skráður inn ef hann er skráður inn þá er kallað
-            á næsta fall i middleware keðjuni annars það er skilað json string með villu */
-function requireAuthentication(req, res, next) {
-  return passport.authenticate(
-    'jwt',
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
-
-      if (!user) {
-        const error = info.name === 'TokenExpiredError' ? 'expired token' : 'invalid token';
-        return res.status(401).json({ error });
-      }
-
-      req.user = user;
-      next();
-    }
-  ) (req, res, next);
-}
 
 /* Notkun : validateUser(username, passoword)
    Fyrir  : username er str af lengd >= 3
@@ -89,10 +67,6 @@ router.post('/register', async (req, res) => {
   return res.status(201).json(data);
 });
 
-
-router.get('/admin', requireAuthentication, (req, res) => {
-  res.json({ data: 'top secret' });
-});
 /* þarf að sjá um að taka við tokens frá notendanum og validate þau */
 
 /* þarf að sjá um að gefa tokens til notendans */
