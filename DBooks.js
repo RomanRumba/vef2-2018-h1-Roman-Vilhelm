@@ -234,6 +234,26 @@ async function updateBook(id, {
   return result.rowCount === 1 ? result.rows[0] : null;
 }
 
+/**
+ * Does the book exist.
+ *
+ * @param {string} username - username of user
+ *
+ * @returns {Promise} Promise representing a boolean representing whether the book exists
+ */
+async function bookExists(title) {
+  const client = new Client({ connectionString });
+  await client.connect();
+  const result = await client.query(`
+  SELECT title
+  FROM books
+  WHERE title = $1`, [
+    xss(title),
+  ]);
+  await client.end();
+  return result.rowCount > 0;
+}
+
 module.exports = {
   categoryExists,
   createCategory,
@@ -243,4 +263,5 @@ module.exports = {
   getBook,
   bookSearch,
   updateBook,
+  bookExists,
 };

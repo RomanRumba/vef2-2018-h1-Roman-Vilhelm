@@ -20,13 +20,18 @@ const {
   getBook,
   bookSearch,
   updateBook,
+  bookExists,
 } = require('./DBooks');
 
 async function validateBookInput({
+  title,
   isbn13,
   category,
 }) {
   const errors = [];
+  if (bookExists) {
+    errors.push({ field: 'title', message: 'title already exists' });
+  }
   if (isbn13.length !== 13 || isNaN(isbn13.length) || !Number.isInteger(isbn13.length)) {
     errors.push({ field: 'isbn13', message: 'isbn13 must be an integer of length 13' });
   }
