@@ -42,7 +42,7 @@ async function createUser({
     xss(imgPath),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 /**
@@ -82,7 +82,7 @@ async function getUser(username) {
     xss(username),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 /**
