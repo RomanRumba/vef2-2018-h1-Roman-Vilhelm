@@ -22,7 +22,7 @@ const {
   updateBook,
 } = require('./DBooks');
 
-function validateBookInput({
+async function validateBookInput({
   isbn13,
   category,
 }) {
@@ -32,9 +32,10 @@ function validateBookInput({
   }
   if (!category) {
     errors.push({ field: 'category', message: 'missing category' });
-  } else if (!categoryExists(category)) {
+  } else if (!(await categoryExists(category))) {
     errors.push({ field: 'category', message: 'category does not exist' });
   }
+  console.log(await categoryExists(category));
   return errors;
 }
 
@@ -86,7 +87,7 @@ router.get('/books', async (req, res) => {
 
 router.post('/books', async (req, res) => {
   const book = req.body;
-  const errors = validateBookInput(book);
+  const errors = await validateBookInput(book);
   if (errors.length > 0) {
     res.status(400).json(errors);
     return;

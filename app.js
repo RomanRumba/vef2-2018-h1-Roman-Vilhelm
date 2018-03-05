@@ -10,6 +10,7 @@ const { Strategy, ExtractJwt } = require('passport-jwt');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcrypt');
 const userAuth = require('./authentication');
+const books = require('./books');
 
 const {
   // getUsers,
@@ -54,6 +55,7 @@ if (!jwtSecret) {
 const app = express();
 app.use(express.json());
 app.use(userAuth);
+app.use(books);
 
 // valkostir sem hægt er að taka frá tótini
 app.get('/', (req, res) => {

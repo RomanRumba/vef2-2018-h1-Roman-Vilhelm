@@ -98,7 +98,7 @@ async function createBook({
     xss(isbn10),
     xss(isbn13),
     xss(published),
-    xss(pagecount),
+    parseInt(xss(pagecount), 10) ? parseInt(xss(pagecount), 10) : null,
     xss(language),
     xss(category),
   ]);
