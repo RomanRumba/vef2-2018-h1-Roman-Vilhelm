@@ -62,6 +62,7 @@ app.get('/', (req, res) => {
   res.json({
     login: '/login',
     admin: '/admin',
+    register: '/register',
     lookForBooks: '/books',
     categories: '/categories',
     specificBook: '/books/:id',
