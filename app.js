@@ -6,12 +6,14 @@ require('dotenv').config();
 
 const express = require('express');
 const passport = require('passport');
+const bcrypt = require('bcrypt');
+const jwt = require('jsonwebtoken');
 const { Strategy, ExtractJwt } = require('passport-jwt');
 
 const auth = require('./authentication');
-const {
-  getUser,
-} = require('./DAuth');
+const userAth = require('./DAuth');
+const userDB = require('./DUsers');
+
 // const users = require('./users');
 // const books = require('./books');
 
@@ -71,7 +73,7 @@ const jwtOptions = {
    Eftir  : skilar notenda á næsta falli i middleware keðjuni ef hann er til
             annars skilað false á næsta fallið i middleware keðjuni */
 async function strat(data, next) {
-  const user = await getUser(data.id);
+  const user = await userDB.getUser(data.id);
   if (user) {
     next(null, user);
   } else {
@@ -82,15 +84,55 @@ async function strat(data, next) {
 // segjum passport að nota strat stretegiuna til að auðkenna notenda með ásamt jwtOptions stillingum
 passport.use(new Strategy(jwtOptions, strat));
 
-passport.serializeUser((user, done) => {
-  done(null, user.id);
-});
-
 app.use(passport.initialize());
 
 /* -------------------------------------------------
    ----------------- PASSPORT END-- ----------------
    ------------------------------------------------- */
+
+/* -------------------------------------------------
+   ------------------- LOGGIN START ----------------
+   ------------------------------------------------- */
+
+/* Notkun : comparePasswords(hash, password)
+   Fyrir  : hash - data to compare
+            passowrd - data to be compared to
+   Eftir  : skilar satt ef lýkillorðið passaði annars ósatt */
+async function comparePasswords(hash, password) {
+  const result = await bcrypt.compare(hash, password);
+  return result;
+}
+
+/* /login
+   POST með notendanafni og lykilorði skilar token */
+app.post('/login', async (req, res) => {
+  // næ i notendanafn og lykill orð úr body
+  const { username, password } = req.body;
+  /*  útaf öll nöfn eru einstök i gagnagruni þá er hægt
+      að leita af notenda með nafni mun skila alltaf 1 eða ekkert */
+  const user = await userAth.getUser(username);
+  /* ef það var skilað tómu rows þá er notandanafnið ekki til
+    og það er skilað json með error ásamt 401 status kóða */
+  if (!user) {
+    return res.status(401).json({ error: 'No such user' });
+  }
+  /* kallað á comparePasswords sem mun auðkenna hvort passwordið sem
+     sem slegið var inn er löglegt */
+  const passwordIsCorrect = await comparePasswords(password, user.password);
+
+  if (passwordIsCorrect) {
+    const payload = { id: user.id };
+    const tokenOptions = { expiresIn: tokenLifetime };
+    const token = jwt.sign(payload, jwtOptions.secretOrKey, tokenOptions);
+    return res.json({ token });
+  }
+  // ef notandi er ekki til þá er skilað json með error ásamt 401 status kóða
+  return res.status(401).json({ error: 'Invalid password' });
+});
+
+/* -------------------------------------------------
+   --------------------LOGGIN END-------------------
+   -------------------------------------------------  */
 
 /* -------------------------------------------------
    ------------Error Functions START----------------
