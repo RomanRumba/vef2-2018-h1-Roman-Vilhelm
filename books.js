@@ -42,6 +42,21 @@ router.get('/books', async (req, res) => {
   const data = await getBooks(offset, limit);
   res.status(200).json(data);
 });
+
+router.post('/books', async (req, res) => {
+  const {
+    title,
+    author = null,
+    descriptio = null,
+    isbn10 = null,
+    isbn13,
+    published = null,
+    pagecount = null,
+    language = null,
+    category,
+  } = req.body;
+  const 
+});
 /* /books?search=query
      -GET skilar síðu af bókum sem uppfylla leitarskilyrði, sjá að neðan */
 
