@@ -77,13 +77,13 @@ async function categoryExists(category) {
  */
 async function createBook({
   title,
-  author,
-  description,
-  isbn10,
+  author = null,
+  description = null,
+  isbn10 = null,
   isbn13,
-  published,
-  pagecount,
-  language,
+  published = null,
+  pagecount = null,
+  language = null,
   category,
 } = {}) {
   const client = new Client({ connectionString });
@@ -196,13 +196,13 @@ async function getBook(id) {
  */
 async function updateBook(id, {
   title,
-  author,
-  description,
-  isbn10,
+  author = null,
+  description = null,
+  isbn10 = null,
   isbn13,
-  published,
-  pagecount,
-  language,
+  published = null,
+  pagecount = null,
+  language = null,
   category,
 } = {}) {
   const client = new Client({ connectionString });
