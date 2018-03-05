@@ -7,15 +7,12 @@ require('dotenv').config();
 const express = require('express');
 const passport = require('passport');
 const bcrypt = require('bcrypt');
-const jwt = require('jsonwebtoken');
 const { Strategy, ExtractJwt } = require('passport-jwt');
+const jwt = require('jsonwebtoken');
 
 const auth = require('./authentication');
 const userAth = require('./DAuth');
 const userDB = require('./DUsers');
-
-// const users = require('./users');
-// const books = require('./books');
 
 /* -------------------------------------------------
    ------------------Requires END ------------------
@@ -74,7 +71,7 @@ const jwtOptions = {
             annars skilað false á næsta fallið i middleware keðjuni */
 async function strat(data, next) {
   const user = await userDB.getUser(data.id);
-  if (user) {
+  if (!user) {
     next(null, user);
   } else {
     next(null, false);
@@ -84,7 +81,9 @@ async function strat(data, next) {
 // segjum passport að nota strat stretegiuna til að auðkenna notenda með ásamt jwtOptions stillingum
 passport.use(new Strategy(jwtOptions, strat));
 
+
 app.use(passport.initialize());
+app.use(passport.session());
 
 /* -------------------------------------------------
    ----------------- PASSPORT END-- ----------------
@@ -133,7 +132,12 @@ app.post('/login', async (req, res) => {
 /* -------------------------------------------------
    --------------------LOGGIN END-------------------
    -------------------------------------------------  */
-
+app.get('/', (req, res) => {
+  res.json({
+    login: '/login',
+    admin: '/admin',
+  });
+});
 /* -------------------------------------------------
    ------------Error Functions START----------------
    ------------------------------------------------- */
@@ -172,7 +176,6 @@ app.use(errorHandler);
 /* -------------------------------------------------
    ------------Error Functions END -----------------
    ------------------------------------------------- */
-
 
 /* ---------------------INIT SERVER --------------------------- */
 
