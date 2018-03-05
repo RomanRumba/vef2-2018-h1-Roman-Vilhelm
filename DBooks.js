@@ -23,7 +23,7 @@ async function createCategory(name) {
     xss(name),
   ]);
   await client.end();
-  return result.rows[0];
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 /**
@@ -103,7 +103,7 @@ async function createBook({
     xss(category),
   ]);
   await client.end();
-  return result.rows[0];
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 /**
@@ -174,7 +174,7 @@ async function getBook(id) {
     xss(id),
   ]);
   await client.end();
-  return result.rows[0];
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 /**
@@ -231,7 +231,7 @@ async function updateBook(id, {
     xss(id),
   ]);
   await client.end();
-  return result.rows[0];
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 module.exports = {
