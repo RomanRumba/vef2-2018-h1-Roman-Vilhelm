@@ -11,6 +11,7 @@ const jwt = require('jsonwebtoken');
 const { Strategy, ExtractJwt } = require('passport-jwt');
 
 const auth = require('./authentication');
+const books = require('./books');
 const userAth = require('./DAuth');
 const userDB = require('./DUsers');
 
@@ -28,6 +29,7 @@ const userDB = require('./DUsers');
 const app = express();
 app.use(express.json());
 app.use(auth);
+app.use(books);
 
 /* Stillingar fyrir vefþjón
    PORT : á hvaða porti er hlustað

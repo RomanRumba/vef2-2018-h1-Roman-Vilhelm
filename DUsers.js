@@ -53,7 +53,7 @@ async function getUser(id) {
     xss(id),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 /* /users/me
@@ -89,7 +89,7 @@ async function updateUser(id, {
     xss(id),
   ]);
   await client.end();
-  return result.rows;
+  return result.rows[0];
 }
 
 
