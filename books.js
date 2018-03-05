@@ -2,8 +2,14 @@ const express = require('express');
 
 const router = express.Router();
 
+const {
+  PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
+  HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1
+} = process.env;
+
+
 /* Þegar gögn eru sótt, búin til eða uppfærð þarf að athuga hvort allt sé gilt
-    og einingar séu til og skila viðeigandi status kóðum/villuskilaboðum ef svo er ekki. */
+og einingar séu til og skila viðeigandi status kóðum/villuskilaboðum ef svo er ekki. */
 
 const {
   categoryExists,
@@ -16,9 +22,25 @@ const {
   updateBook,
 } = require('./DBooks');
 
+function validateBookInput({
+  isbn13,
+  category,
+}) {
+  const errors = [];
+  if (isbn13.length !== 13 || isNaN(isbn13.length) || !Number.isInteger(isbn13.length)) {
+    errors.push({ field: 'isbn13', message: 'isbn13 must be an integer of length 13' });
+  }
+  if (!category) {
+    errors.push({ field: 'category', message: 'missing category' });
+  } else if (!categoryExists(category)) {
+    errors.push({ field: 'category', message: 'category does not exist' });
+  }
+  return errors;
+}
+
 /* /categories
-    -GET skilar síðu af flokkum
-    -POST býr til nýjan flokk og skilar */
+-GET skilar síðu af flokkum
+-POST býr til nýjan flokk og skilar */
 router.get('/categories', async (req, res) => {
   const data = await getCategories();
   res.status(200).json(data);
@@ -39,23 +61,39 @@ router.post('/categories', async (req, res) => {
 
 router.get('/books', async (req, res) => {
   const { offset = 0, limit = 10 } = req.query;
+  console.log(offset, limit);
   const data = await getBooks(offset, limit);
-  res.status(200).json(data);
+  const result = {
+    _links: {
+      self: {
+        href: `http://${host}:${port}/books?offset=${offset}&limit=${limit}`,
+      },
+    },
+    items: data,
+  };
+  if (offset > 0) {
+    result._links.prev = {
+      href: `http://${host}:${port}/books?offset=${offset - limit}&limit=${limit}`,
+    };
+  }
+  if (data.length <= limit) {
+    result._links.next = {
+      href: `http://${host}:${port}/books?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+    };
+  }
+  res.status(200).json(result);
 });
 
 router.post('/books', async (req, res) => {
-  const {
-    title,
-    author = null,
-    descriptio = null,
-    isbn10 = null,
-    isbn13,
-    published = null,
-    pagecount = null,
-    language = null,
-    category,
-  } = req.body;
-  const 
+  const book = req.body;
+  const errors = validateBookInput(book);
+  if (errors.length > 0) {
+    res.status(400).json(errors);
+    return;
+  }
+  console.log(book, errors);
+  const data = await createBook(book);
+  res.status(200).json(data);
 });
 /* /books?search=query
      -GET skilar síðu af bókum sem uppfylla leitarskilyrði, sjá að neðan */
