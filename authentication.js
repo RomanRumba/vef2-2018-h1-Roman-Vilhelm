@@ -104,7 +104,7 @@ function requireAuthentication(req, res, next) {
 /* /register
      POST býr til notanda og skilar án lykilorðs hash */
 router.post('/register', async (req, res) => {
-  const { username, password } = req.body;
+  const { username, password, name, imgPath } = req.body;
   const error = validateUser(username, password);
   if (error.length > 0) {
     return res.status(400).json(error);
@@ -120,12 +120,18 @@ router.post('/register', async (req, res) => {
   const usrInfo = {
     username,
     password: hashedPassword,
-    name: '',
-    imgPath: '/',
+    name,
+    imgPath,
   };
   const data = await createUser(usrInfo);
-  data.password = password;// spurja ernir
-  return res.status(201).json(data);
+  const output = {
+    Message: 'User was created!',
+    Id: data.id,
+    Username: data.username,
+    Name: data.name !== '' ? data.name : null,
+    ImgPath: data.imgpath !== '' ? data.imgpath : null,
+  };
+  return res.status(201).json(output);
 });
 
 /* /login
