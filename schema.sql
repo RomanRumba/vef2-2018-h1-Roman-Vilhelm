@@ -28,8 +28,8 @@ CREATE TABLE books(
 CREATE TABLE booksRead(
 	userID INT REFERENCES users(id),
 	bookID INT REFERENCES books(id),
-	rating INT,
-	review TEXT NOT NULL,
+	rating INT NOT NULL,
+	review TEXT,
 	PRIMARY KEY(userID, bookID)
 );
 

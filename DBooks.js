@@ -196,13 +196,13 @@ async function getBook(id) {
  */
 async function updateBook(id, {
   title,
-  author = null,
-  description = null,
-  isbn10 = null,
+  author,
+  description,
+  isbn10,
   isbn13,
-  published = null,
-  pagecount = null,
-  language = null,
+  published,
+  pagecount,
+  language,
   category,
 } = {}) {
   const client = new Client({ connectionString });

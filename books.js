@@ -24,6 +24,39 @@ const {
   bookIdExists,
 } = require('./DBooks');
 
+async function validateBookInsertInput({
+  title,
+  isbn13,
+  category,
+  pageCount,
+  language,
+} = {}) {
+  const errors = [];
+  if (!title || title.length < 1) {
+    errors.push({ field: 'title', message: 'title is a required field' });
+  }
+  if (await bookTitleExists()) {
+    errors.push({ field: 'title', message: 'title already exists' });
+  }
+  // disable hér eslint því því líkar ekki við isNaN
+  if (isbn13.length !== 13 || isNaN(isbn13) || !Number.isInteger(parseFloat(isbn13, 10))) { // eslint-disable-line
+    errors.push({ field: 'isbn13', message: 'isbn13 must be an integer of length 13' });
+  }
+  if (!category) {
+    errors.push({ field: 'category', message: 'missing category' });
+  } else if (!(await categoryExists(category))) {
+    errors.push({ field: 'category', message: 'category does not exist' });
+  }
+  // disable hér eslint því því líkar ekki við isNaN
+  if (typeof pageCount !== 'undefined' &&
+    (isbn13 > 0 || isNaN(pageCount) || !Number.isInteger(parseFloat(pageCount, 10)))) { // eslint-disable-line
+    errors.push({ field: 'pageCount', message: 'pageCount must be a positive integer' });
+  }
+  if (typeof langage !== 'undefined' && (!language || language.length !== 2)) {
+    errors.push({ field: 'language', message: 'language has to be exactly 2 characters' });
+  }
+  return errors;
+}
 
 /* /categories
 -GET skilar síðu af flokkum
@@ -79,7 +112,7 @@ router.get('/books', async (req, res) => {
 
 router.post('/books', async (req, res) => {
   const book = req.body;
-  const errors = await validateBookInput(book);
+  const errors = await validateBookInsertInput(book);
   if (errors.length > 0) {
     res.status(400).json(errors);
     return;
@@ -110,50 +143,98 @@ router.get('/books/:id', async (req, res) => {
 });
 
 
-async function validateBookInput({
+async function validateBookUpdateInput(id, {
   title,
   isbn13,
   category,
+  pageCount,
+  language,
 } = {}) {
   const errors = [];
-  if (!title || title.length < 1) {
+  // ef title er defined, en er tómur
+  if (typeof title !== 'undefined' && title.length < 1) {
     errors.push({ field: 'title', message: 'title is a required field' });
   }
-  if (bookTitleExists()) {
+  // console.log(id, title, (await getBook(id)));
+  // title er tekinn, en er ekki title bókarinnar sem er uppfærð
+  if (await bookTitleExists(title)) {
     errors.push({ field: 'title', message: 'title already exists' });
   }
-  if (isbn13.length !== 13 || isNaN(isbn13.length) || !Number.isInteger(isbn13.length)) {
+  // disable hér eslint því því líkar ekki við isNaN
+  if (typeof isbn13 !== 'undefined' &&
+    (isbn13.length !== 13 || isNaN(isbn13) || !Number.isInteger(parseFloat(isbn13, 10)))) { // eslint-disable-line
     errors.push({ field: 'isbn13', message: 'isbn13 must be an integer of length 13' });
   }
-  if (!category) {
-    errors.push({ field: 'category', message: 'missing category' });
+  if (typeof category !== 'undefined' && !category) {
+    errors.push({ field: 'category', message: 'category must not be empty or null' });
   } else if (!(await categoryExists(category))) {
     errors.push({ field: 'category', message: 'category does not exist' });
+  }
+  // disable hér eslint því því líkar ekki við isNaN
+  if (typeof pageCount !== 'undefined' &&
+    (isbn13 > 0 || isNaN(pageCount) || !Number.isInteger(parseFloat(pageCount, 10)))) { // eslint-disable-line
+    errors.push({ field: 'pageCount', message: 'pageCount must be a positive integer' });
+  }
+  console.log(language, typeof language !== 'undefined');
+  if (typeof language !== 'undefined' && (!language || language.length !== 2)) {
+    errors.push({ field: 'language', message: 'language has to be exactly 2 characters' });
   }
   return errors;
 }
 
 router.post('/books/:id', async (req, res) => {
   const id = parseFloat(req.params.id, 10);
-  const book = req.body;
-  console.log(id, book);
+
+  const originalBook = await getBook(id);
+  const {
+    title = originalBook.title,
+    author = originalBook.author,
+    description = originalBook.description,
+    isbn10 = originalBook.isbn10,
+    isbn13 = originalBook.isbn13,
+    published = originalBook.published,
+    pagecount = originalBook.pagecount,
+    language = originalBook.language,
+    category = originalBook.category,
+  } = req.body;
+
+  // console.log(id, book);
   // disable hér eslint því því líkar ekki við isNaN
   if (isNaN(id) || !Number.isInteger(id) || id <= 0) { // eslint-disable-line
     res.status(400).json([{ field: 'id', message: 'Id must be a positive integer number' }]);
     return;
   }
-  if (!await bookIdExists(id)) { // eslint-disable-line
+  if (!await bookIdExists(id)) {
     res.status(404).json([{ field: 'id', message: 'Id not found' }]);
     return;
   }
-  const errors = await validateBookInput(book);
+  const errors = await validateBookUpdateInput(id, {
+    title,
+    author,
+    description,
+    isbn10,
+    isbn13,
+    published,
+    pagecount,
+    language,
+    category,
+  });
   if (errors.length > 0) {
     res.status(400).json(errors);
     return;
   }
-
   // const data = await updateBook(id, book);
-  res.status(200).json(data);
+  res.status(200).json({
+    title,
+    author,
+    description,
+    isbn10,
+    isbn13,
+    published,
+    pagecount,
+    language,
+    category,
+  });
 });
 /* þarf að exporta þetta er Route */
 

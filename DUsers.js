@@ -128,7 +128,32 @@ async function getReadBooks(id, offset = 0, limit = 10) {
 /* /users/me/read
      -GET skilar síðu af lesnum bókum innskráðs notanda
      -POST býr til nýjan lestur á bók og skilar */
-// nota getReadBooks
+
+/**
+ * Read all books read by user.
+ *
+ * @param {int} userId - id of user
+ * @param {int} bookId - id of book
+ * @param {int} rating - rating of book
+ * @param {int} review - review of book
+ *
+ * @returns {Promise} Promise representing an array of offset and limited book objects
+ */
+async function readBook(userId, bookId, rating = null, review = null) {
+  const client = new Client({ connectionString });
+  await client.connect();
+  const result = await client.query(`
+    INSERT INTO booksRead(userID, bookID, rating, review)
+    VALUES($1, $2, $3, $4);
+    RETURNING userID, bookID, rating, review`, [
+    xss(userId),
+    xss(bookId),
+    xss(rating),
+    xss(review),
+  ]);
+  await client.end();
+  return result.rowCount === 1 ? result.rows[0] : null;
+}
 
 /* /users/me/read/:id
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
@@ -221,7 +246,7 @@ async function createUser({
     xss(imgPath),
   ]);
   await client.end();
-  return result.rows[0];
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 /**
@@ -262,26 +287,6 @@ async function getUserByUsername(username) {
   ]);
   await client.end();
   return result.rowCount === 1 ? result.rows[0] : null;
-}
-
-/**
- * Do username and password correspond?
- *
- * @returns {Promise} Promise representing a boolean representing whether the login succeeded.
- */
-async function login(username, password) {
-  const client = new Client({ connectionString });
-  await client.connect();
-  const result = await client.query(`
-  SELECT id
-  FROM users
-  WHERE username = $1
-  AND password = $2`, [
-    xss(username),
-    xss(password),
-  ]);
-  await client.end();
-  return result.rows > 0;
 }
 
 module.exports = {
