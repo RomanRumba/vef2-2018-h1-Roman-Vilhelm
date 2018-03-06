@@ -10,6 +10,7 @@ const { Strategy, ExtractJwt } = require('passport-jwt');
 
 const userAuth = require('./authentication');
 const books = require('./books');
+const users = require('./users');
 
 const {
   // getUsers,
@@ -51,12 +52,12 @@ const app = express();
 app.use(express.json());
 app.use(userAuth);
 app.use(books);
+app.use(users);
 
 // valkostir sem hægt er að taka frá rótini
 app.get('/', (req, res) => {
   res.json({
     login: '/login',
-    admin: '/admin',
     register: '/register',
     lookForBooks: '/books',
     categories: '/categories',

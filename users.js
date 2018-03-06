@@ -1,6 +1,51 @@
-/* Þegar gögn eru sótt, búin til eða uppfærð þarf að athuga hvort allt sé gilt og
-  einingar séu til og skila viðeigandi status kóðum/villuskilaboðum ef svo er ekki. */
+/* -------------------------------------------------
+   ------------------Requires START ----------------
+   ------------------------------------------------- */
 
+const passport = require('passport');
+const express = require('express');
+
+const router = express.Router();
+/* -------------------------------------------------
+   ------------------Requires END ------------------
+   ------------------------------------------------- */
+
+/* -------------------------------------------------
+   ------- FUNCTION DECLERATION START --------------
+   ------------------------------------------------- */
+
+/* þarf að sjá um að gefa tokens til notendans */
+/* Notkun : requireAuthentication(req, res, next)
+   Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
+             okkur aðgang að upplýsingum um HTTP request frá client.
+            -res er skrifanlegur straumur sem sendur verður til clients.
+            -next er næsti middleware i keðjuni.
+   Eftir  : athugar hvort aðili er skráður inn ef hann er skráður inn þá er kallað
+            á næsta fall i middleware keðjuni annars það er skilað json string með villu */
+function requireAuthentication(req, res, next) {
+  return passport.authenticate(
+    'jwt',
+    { session: false },
+    (err, user, info) => {
+      if (err) {
+        return next(err);
+      }
+      if (!user) {
+        const error = info.name === 'TokenExpiredError' ? 'expired token' : 'invalid token';
+        return res.status(401).json({ error });
+      }
+      req.user = user;
+      next();
+    }) (req, res, next);
+}
+
+/* -------------------------------------------------
+   ------- FUNCTION DECLERATION END ----------------
+   ------------------------------------------------- */
+
+router.get('/admin', requireAuthentication, (req, res) => {
+  res.json({ data: 'top secret' });
+});
 /* Fyrir notanda sem ekki er skráður er inn skal vera hægt að:
    -Skoða allar bækur og flokka
    -Leita að bókum */
@@ -50,3 +95,6 @@
 
 /* þarf að exporta þetta er Route */
 
+// --------------- Export Router ----------------------
+
+module.exports = router;
