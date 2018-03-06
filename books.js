@@ -69,7 +69,7 @@ router.get('/categories', async (req, res) => {
 router.post('/categories', async (req, res) => {
   const { name } = req.body;
   const data = await createCategory(name);
-  res.status(200).json(data);
+  res.status(201).json(data);
 });
 
 
@@ -118,7 +118,7 @@ router.post('/books', async (req, res) => {
     return;
   }
   const data = await createBook(book);
-  res.status(200).json(data);
+  res.status(201).json(data);
 });
 
 /* /books/:id
@@ -157,7 +157,7 @@ async function validateBookUpdateInput(id, {
   }
   // console.log(id, title, (await getBook(id)));
   // title er tekinn, en er ekki title bókarinnar sem er uppfærð
-  if (await bookTitleExists(title)) {
+  if (await bookTitleExists(title) && await getBook(id).title != title) {
     errors.push({ field: 'title', message: 'title already exists' });
   }
   // disable hér eslint því því líkar ekki við isNaN
@@ -198,7 +198,6 @@ router.post('/books/:id', async (req, res) => {
     category = originalBook.category,
   } = req.body;
 
-  // console.log(id, book);
   // disable hér eslint því því líkar ekki við isNaN
   if (isNaN(id) || !Number.isInteger(id) || id <= 0) { // eslint-disable-line
     res.status(400).json([{ field: 'id', message: 'Id must be a positive integer number' }]);
@@ -223,8 +222,7 @@ router.post('/books/:id', async (req, res) => {
     res.status(400).json(errors);
     return;
   }
-  // const data = await updateBook(id, book);
-  res.status(200).json({
+  const data = await updateBook(id, {
     title,
     author,
     description,
@@ -235,7 +233,7 @@ router.post('/books/:id', async (req, res) => {
     language,
     category,
   });
+  res.status(204).json(data);
 });
-/* þarf að exporta þetta er Route */
 
 module.exports = router;

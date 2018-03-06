@@ -302,5 +302,4 @@ module.exports = {
   createUser,
   userExists,
   getUserByUsername,
-  login,
 };
