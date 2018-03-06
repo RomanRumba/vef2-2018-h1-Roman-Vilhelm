@@ -123,7 +123,7 @@ async function getBooks(offset = 0, limit = 10) {
     ORDER BY id
     OFFSET $1
     LIMIT $2`, [
-    xss(offset),
+    offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
     xss(limit),
   ]);
   await client.end();
@@ -141,12 +141,7 @@ async function getBooks(offset = 0, limit = 10) {
 async function bookSearch(search, offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
-  console.log(
-    xss(search), search,
-    xss(offset), offset,
-    xss(limit), limit
-  );
-  const result = await client.query(`
+  console.log(await client.query(`
     SELECT id,title,author,description,isbn10,isbn13,published,pagecount,language,category 
     FROM books
     WHERE to_tsvector('english', title) @@ to_tsquery('english', $1)
@@ -167,7 +162,7 @@ async function bookSearch(search, offset = 0, limit = 10) {
  *
  * @param {int} id - id of book to read
  *
- * @returns {Promise} Promise representing an array of offset and limited book objects
+ * @returns {Promise} Promise representing a book object
  */
 async function getBook(id) {
   const client = new Client({ connectionString });
@@ -240,13 +235,13 @@ async function updateBook(id, {
 }
 
 /**
- * Does the book exist.
+ * Does the book title exist.
  *
- * @param {string} username - username of user
+ * @param {string} title - username of user
  *
- * @returns {Promise} Promise representing a boolean representing whether the book exists
+ * @returns {Promise} Promise representing a boolean representing whether the book title exists
  */
-async function bookExists(title) {
+async function bookTitleExists(title) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
@@ -254,6 +249,26 @@ async function bookExists(title) {
   FROM books
   WHERE title = $1`, [
     xss(title),
+  ]);
+  await client.end();
+  return result.rowCount > 0;
+}
+
+/**
+ * Does the book exist.
+ *
+ * @param {string} id - username of user
+ *
+ * @returns {Promise} Promise representing a boolean representing whether the book id exists
+ */
+async function bookIdExists(id) {
+  const client = new Client({ connectionString });
+  await client.connect();
+  const result = await client.query(`
+  SELECT id
+  FROM books
+  WHERE id = $1`, [
+    xss(id),
   ]);
   await client.end();
   return result.rowCount > 0;
@@ -268,5 +283,6 @@ module.exports = {
   getBook,
   bookSearch,
   updateBook,
-  bookExists,
+  bookTitleExists,
+  bookIdExists,
 };

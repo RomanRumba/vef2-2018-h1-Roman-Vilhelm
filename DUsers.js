@@ -26,7 +26,7 @@ async function getUsers(offset = 0, limit = 10) {
     ORDER BY id
     OFFSET $1
     LIMIT $2`, [
-    xss(offset),
+    offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
     xss(limit),
   ]);
   await client.end();
@@ -117,7 +117,7 @@ async function getReadBooks(id, offset = 0, limit = 10) {
     OFFSET $2
     LIMIT $3`, [
     xss(id),
-    xss(offset),
+    offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
     xss(limit),
   ]);
   await client.end();
