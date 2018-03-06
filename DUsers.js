@@ -21,13 +21,13 @@ async function getUsers(offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
-    SELECT username, name, imgPath 
+    SELECT id, username, name, imgPath 
     FROM users
     ORDER BY id
     OFFSET $1
     LIMIT $2`, [
     offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
-    xss(limit),
+    limit === 0 ? 0 : xss(limit), // ef limit = 0, þá mun xss breyta honum í tíma strenginn,
   ]);
   await client.end();
   return result.rows;
@@ -118,7 +118,7 @@ async function getReadBooks(id, offset = 0, limit = 10) {
     LIMIT $3`, [
     xss(id),
     offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
-    xss(limit),
+    limit === 0 ? 0 : xss(limit), // ef limit = 0, þá mun xss breyta honum í tíma strenginn,
   ]);
   await client.end();
   return result.rows;
