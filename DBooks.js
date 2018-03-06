@@ -124,7 +124,7 @@ async function getBooks(offset = 0, limit = 10) {
     OFFSET $1
     LIMIT $2`, [
     offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
-    xss(limit),
+    limit === 0 ? 0 : xss(limit), // ef limit = 0, þá mun xss breyta honum í tíma strenginn,
   ]);
   await client.end();
   return result.rows;
@@ -141,7 +141,7 @@ async function getBooks(offset = 0, limit = 10) {
 async function bookSearch(search, offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
-  console.log(await client.query(`
+  const result = await client.query(`
     SELECT id,title,author,description,isbn10,isbn13,published,pagecount,language,category 
     FROM books
     WHERE to_tsvector('english', title) @@ to_tsquery('english', $1)
@@ -151,7 +151,7 @@ async function bookSearch(search, offset = 0, limit = 10) {
     LIMIT $3`, [
     xss(search),
     offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
-    xss(limit),
+    limit === 0 ? 0 : xss(limit), // ef limit = 0, þá mun xss breyta honum í tíma strenginn
   ]);
   await client.end();
   return result.rows;
