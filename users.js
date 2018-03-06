@@ -134,8 +134,7 @@ router.patch('/me', requireAuthentication, async (req, res) => {
   if (errors.length > 0) {
     return res.status(400).json(errors);
   }
-  console.log(req.user);
-  const result = await updateUser(id, { name, password });
+  const result = await updateUser(req.user.id, { name, password });
   return res.status(200).json(result);
 });
 

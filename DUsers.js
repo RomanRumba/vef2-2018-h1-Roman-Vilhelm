@@ -82,7 +82,7 @@ async function updateUser(id, {
   const result = await client.query(`
     UPDATE users SET 
     name = $1,
-    password = $2,
+    password = $2
     WHERE id = $3
     RETURNING username, name`, [
     xss(name),
