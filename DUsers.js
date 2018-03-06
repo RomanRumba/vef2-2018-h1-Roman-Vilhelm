@@ -295,6 +295,7 @@ module.exports = {
   getUserById,
   updateUser,
   getReadBooks,
+  readBook,
   deleteReadBook,
   updateImgPath,
   // authentication
