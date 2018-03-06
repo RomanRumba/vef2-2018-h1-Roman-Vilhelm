@@ -47,7 +47,7 @@ async function getUserById(id) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
-    SELECT username, name, imgPath 
+    SELECT id, username, name, imgPath 
     FROM users
     WHERE id = $1`, [
     xss(id),
