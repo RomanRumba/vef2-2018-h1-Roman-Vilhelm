@@ -52,7 +52,7 @@ const app = express();
 app.use(express.json());
 app.use(userAuth);
 app.use(books);
-app.use(users);
+app.use('/users', users);
 
 // valkostir sem hægt er að taka frá rótini
 app.get('/', (req, res) => {

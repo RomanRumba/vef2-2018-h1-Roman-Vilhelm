@@ -5,7 +5,25 @@
 const passport = require('passport');
 const express = require('express');
 
+const {
+  PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
+  HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1
+} = process.env;
+
+const {
+  getUsers,
+  getUserById,
+  // updateUser,
+  getReadBooks,
+  // deleteReadBook,
+  // updateImgPath,
+  // createUser,
+  // userExists,
+  // getUserByUsername,
+} = require('./DUsers');
+
 const router = express.Router();
+
 /* -------------------------------------------------
    ------------------Requires END ------------------
    ------------------------------------------------- */
@@ -43,9 +61,6 @@ function requireAuthentication(req, res, next) {
    ------- FUNCTION DECLERATION END ----------------
    ------------------------------------------------- */
 
-router.get('/admin', requireAuthentication, (req, res) => {
-  res.json({ data: 'top secret' });
-});
 /* Fyrir notanda sem ekki er skráður er inn skal vera hægt að:
    -Skoða allar bækur og flokka
    -Leita að bókum */
@@ -61,18 +76,85 @@ router.get('/admin', requireAuthentication, (req, res) => {
 /* /users
      -GET skilar síðu (sjá að neðan) af notendum
      -Lykilorðs hash skal ekki vera sýnilegt */
+router.get('/', async (req, res) => {
+  const { offset = 0, limit = 10 } = req.query;
+  const users = await getUsers(offset, limit);
+
+  const result = {
+    _links: {
+      self: {
+        href: `http://${host}:${port}/users?offset=${offset}&limit=${limit}`,
+      },
+    },
+    items: users,
+  };
+  if (offset > 0) {
+    result._links.prev = {
+      href: `http://${host}:${port}/users?offset=${offset - limit}&limit=${limit}`,
+    };
+  }
+  if (users.length >= limit) {
+    result._links.next = {
+      href: `http://${host}:${port}/users?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+    };
+  }
+  res.status(200).json(result);
+});
 
 /* /users/:id
     -GET skilar stökum notanda ef til
      Lykilorðs hash skal ekki vera sýnilegt */
+router.get('/:id', async (req, res) => {
+  const { id } = req.params;
+  const user = await getUserById(id);
+  // ef user id er ekki til þá skila villu
+  if (!user) {
+    return res.status(404).json({ error: 'Id does not exist' });
+  }
+  // ef notandi er til þá skilum honum
+  return res.status(200).json(user);
+});
+
+/* /users/:id/read
+     -GET skilar síðu af lesnum bókum notanda */
+router.get('/:id/read', async (req, res) => {
+  const { id } = req.params;
+  const user = await getUserById(id);
+  // ef user id er ekki til þá skila villu
+  if (!user) {
+    return res.status(404).json({ error: 'Id does not exist' });
+  }
+  // ef komin hingað þá þyðir það að user id er til þá getum haldið áfram
+  const { offset = 0, limit = 10 } = req.query;
+  const userBooks = await getReadBooks(id, offset, limit);
+
+  const result = {
+    _links: {
+      self: {
+        href: `http://${host}:${port}/users/${id}/read?offset=${offset}&limit=${limit}`,
+      },
+    },
+    items: userBooks,
+  };
+  if (offset > 0) {
+    result._links.prev = {
+      href: `http://${host}:${port}/users/${id}/read?offset=${offset - limit}&limit=${limit}`,
+    };
+  }
+  if (userBooks.length >= limit) {
+    result._links.next = {
+      href: `http://${host}:${port}/users/${id}/read?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+    };
+  }
+  res.status(200).json(result);
+});
+
 
 /* /users/me
      -GET skilar innskráðum notanda (þ.e.a.s. þér)
      -PATCH uppfærir sendar upplýsingar um notanda fyrir utan notendanafn,
       þ.e.a.s. nafn eða lykilorð, ef þau eru gild */
 
-/* /users/:id/read
-     -GET skilar síðu af lesnum bókum notanda */
 
 /* /users/me/read
      -GET skilar síðu af lesnum bókum innskráðs notanda
