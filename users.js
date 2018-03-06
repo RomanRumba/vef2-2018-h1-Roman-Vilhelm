@@ -57,6 +57,24 @@ function requireAuthentication(req, res, next) {
     }) (req, res, next);
 }
 
+/* Notkun : validatePassAndName(password , name)
+   Fyrir  : password er strengur sem verður að vera amk 6 stafir
+            name er strengur má ekki vera tómur
+   Efitir : skilar fylki af json obj sem gefa tilkynna ef
+            það var brotið reglur um name og password */
+function validatePassAndName(password, name) {
+  const error = [];
+  // chekka ef nafn er strengur og hvort hann er tómur
+  if (typeof name !== 'string' || name === '') {
+    error.push({ field: 'Name', error: 'Name has to be a Non-Empty string' });
+  }
+  // chekka ef password er strengur og stafafjölda >= 6
+  if (typeof password !== 'string' || password.length < 6) {
+    error.push({ field: 'Password', error: 'Password has to be a string and of lenght of bigger than or equal 6' });
+  }
+  return error;
+}
+
 /* -------------------------------------------------
    ------- FUNCTION DECLERATION END ----------------
    ------------------------------------------------- */
@@ -99,6 +117,24 @@ router.get('/', async (req, res) => {
     };
   }
   res.status(200).json(result);
+});
+
+/* /users/me
+     -GET skilar innskráðum notanda (þ.e.a.s. þér) */
+router.get('/me', requireAuthentication, async (req, res) => {
+  return res.status(200).json(req.user);
+});
+
+/* /users/me
+     -PATCH uppfærir sendar upplýsingar um notanda fyrir utan notendanafn,
+      þ.e.a.s. nafn eða lykilorð, ef þau eru gild */
+router.patch('/me', requireAuthentication, async (req, res) => {
+  const { password, name } = req.body;
+  const errors = validatePassAndName(password, name);
+  if (errors.length > 0) {
+    return res.status(400).json(errors);
+  }
+  
 });
 
 /* /users/:id
@@ -148,13 +184,6 @@ router.get('/:id/read', async (req, res) => {
   }
   res.status(200).json(result);
 });
-
-
-/* /users/me
-     -GET skilar innskráðum notanda (þ.e.a.s. þér)
-     -PATCH uppfærir sendar upplýsingar um notanda fyrir utan notendanafn,
-      þ.e.a.s. nafn eða lykilorð, ef þau eru gild */
-
 
 /* /users/me/read
      -GET skilar síðu af lesnum bókum innskráðs notanda

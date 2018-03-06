@@ -83,7 +83,8 @@ async function updateUser(id, {
     UPDATE users SET 
     name = $1,
     password = $2,
-    WHERE id = $3`, [
+    WHERE id = $3
+    RETURNING username, name`, [
     xss(name),
     xss(password),
     xss(id),
