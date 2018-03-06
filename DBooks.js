@@ -141,16 +141,21 @@ async function getBooks(offset = 0, limit = 10) {
 async function bookSearch(search, offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
+  console.log(
+    xss(search), search,
+    xss(offset), offset,
+    xss(limit), limit
+  );
   const result = await client.query(`
     SELECT id,title,author,description,isbn10,isbn13,published,pagecount,language,category 
     FROM books
-    WHERE to_tsvector('english', title) @@ to_tsquery('english', '$1')
-    OR to_tsvector('english', description) @@ to_tsquery('english', '$1')
+    WHERE to_tsvector('english', title) @@ to_tsquery('english', $1)
+    OR to_tsvector('english', description) @@ to_tsquery('english', $1)
     ORDER BY id
     OFFSET $2
     LIMIT $3`, [
     xss(search),
-    xss(offset),
+    offset === 0 ? 0 : xss(offset), // ef offset = 0, þá mun xss breyta honum í tíma strenginn
     xss(limit),
   ]);
   await client.end();

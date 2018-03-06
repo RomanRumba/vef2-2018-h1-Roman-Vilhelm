@@ -67,27 +67,33 @@ router.post('/categories', async (req, res) => {
      -POST býr til nýja bók ef hún er gild og skilar
       Fyrir fyrirspurnir sem skila listum af gögnum þarf að _page_a þau gögn.
       Þ.e.a.s. að sækja aðeins takmarkað magn úr heildarlista í einu og láta vita af næstu síðu. */
+/* /books?search=query
+     -GET skilar síðu af bókum sem uppfylla leitarskilyrði, sjá að neðan */
 
 router.get('/books', async (req, res) => {
-  const { offset = 0, limit = 10 } = req.query;
-  console.log(offset, limit);
-  const data = await getBooks(offset, limit);
+  const { search = null, offset = 0, limit = 10 } = req.query;
+  let data;
+  if (search) {
+    data = await bookSearch(search, offset, limit);
+  } else {
+    data = await getBooks(offset, limit);
+  }
   const result = {
     _links: {
       self: {
-        href: `http://${host}:${port}/books?offset=${offset}&limit=${limit}`,
+        href: `http://${host}:${port}/books?search=${search}&offset=${offset}&limit=${limit}`,
       },
     },
     items: data,
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/books?offset=${offset - limit}&limit=${limit}`,
+      href: `http://${host}:${port}/books?search=${search}&offset=${offset - limit}&limit=${limit}`,
     };
   }
-  if (data.length <= limit) {
+  if (data.length >= limit) {
     result._links.next = {
-      href: `http://${host}:${port}/books?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+      href: `http://${host}:${port}/books?search=${search}&offset=${Number(offset) + Number(limit)}&limit=${limit}`,
     };
   }
   res.status(200).json(result);
@@ -104,8 +110,6 @@ router.post('/books', async (req, res) => {
   const data = await createBook(book);
   res.status(200).json(data);
 });
-/* /books?search=query
-     -GET skilar síðu af bókum sem uppfylla leitarskilyrði, sjá að neðan */
 
 /* /books/:id
      -GET skilar stakri bók
