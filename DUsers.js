@@ -139,12 +139,12 @@ async function getReadBooks(id, offset = 0, limit = 10) {
  *
  * @returns {Promise} Promise representing an array of offset and limited book objects
  */
-async function readBook(userId, bookId, rating = null, review = null) {
+async function readBook(userId, bookId, rating, review = null) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
     INSERT INTO booksRead(userID, bookID, rating, review)
-    VALUES($1, $2, $3, $4);
+    VALUES($1, $2, $3, $4)
     RETURNING userID, bookID, rating, review`, [
     xss(userId),
     xss(bookId),

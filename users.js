@@ -15,12 +15,26 @@ const {
   getUserById,
   updateUser,
   getReadBooks,
+  readBook,
   // deleteReadBook,
   // updateImgPath,
   // createUser,
   // userExists,
   // getUserByUsername,
 } = require('./DUsers');
+
+const {
+  // categoryExists,
+  // createCategory,
+  // getCategories,
+  // createBook,
+  // getBooks,
+  getBook,
+  // bookSearch,
+  // updateBook,
+  // bookTitleExists,
+  // bookIdExists,
+} = require('./DBooks');
 
 const router = express.Router();
 
@@ -73,6 +87,35 @@ function validatePassAndName(password, name) {
     error.push({ field: 'Password', error: 'Password has to be a string and of lenght of bigger than or equal 6' });
   }
   return error;
+}
+
+/* Notkun : getUsersReadBooks(id, limit, offset)
+   Fyrir  : id er heiltala stærra en 0
+            limit er heiltala stærri en 0
+            offset er heiltala
+   Eftir  : skilar fylki af json obj af 10 lestum bókum notandans
+            ásmat slóð til að fá næstu 10  */
+async function getUsersReadBooks(id, limit, offset) {
+  const userBooks = await getReadBooks(id, offset, limit);
+  const result = {
+    _links: {
+      self: {
+        href: `http://${host}:${port}/users/${id}/read?offset=${offset}&limit=${limit}`,
+      },
+    },
+    items: userBooks,
+  };
+  if (offset > 0) {
+    result._links.prev = {
+      href: `http://${host}:${port}/users/${id}/read?offset=${offset - limit}&limit=${limit}`,
+    };
+  }
+  if (userBooks.length >= limit) {
+    result._links.next = {
+      href: `http://${host}:${port}/users/${id}/read?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+    };
+  }
+  return result;
 }
 
 /* -------------------------------------------------
@@ -138,6 +181,28 @@ router.patch('/me', requireAuthentication, async (req, res) => {
   return res.status(200).json(result);
 });
 
+/* /users/me/read
+     -GET skilar síðu af lesnum bókum innskráðs notanda */
+router.get('/me/read', requireAuthentication, async (req, res) => {
+  const { offset = 0, limit = 10 } = req.query;
+  res.status(200).json(await getUsersReadBooks(req.user.id, offset, limit));
+});
+
+/* /users/me/read
+     -POST býr til nýjan lestur á bók og skilar */
+router.post('/me/read', requireAuthentication, async (req, res) => {
+  const { bookId, bookRating, review } = req.body;
+  const book = await getBook(bookId);
+  if (!book) {
+    return res.status(404).json({ error: 'Book not found' });
+  }
+  if (bookRating < 1 || bookRating > 5) {
+    return res.status(400).json({ error: 'Rating has to be a number between 1 and 5' });
+  }
+  const userRead = await readBook(req.user.id, bookId, bookRating, review);
+  return res.status(200).json(userRead);
+});
+
 /* /users/:id
     -GET skilar stökum notanda ef til
      Lykilorðs hash skal ekki vera sýnilegt */
@@ -163,35 +228,14 @@ router.get('/:id/read', async (req, res) => {
   }
   // ef komin hingað þá þyðir það að user id er til þá getum haldið áfram
   const { offset = 0, limit = 10 } = req.query;
-  const userBooks = await getReadBooks(id, offset, limit);
-
-  const result = {
-    _links: {
-      self: {
-        href: `http://${host}:${port}/users/${id}/read?offset=${offset}&limit=${limit}`,
-      },
-    },
-    items: userBooks,
-  };
-  if (offset > 0) {
-    result._links.prev = {
-      href: `http://${host}:${port}/users/${id}/read?offset=${offset - limit}&limit=${limit}`,
-    };
-  }
-  if (userBooks.length >= limit) {
-    result._links.next = {
-      href: `http://${host}:${port}/users/${id}/read?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
-    };
-  }
-  res.status(200).json(result);
+  res.status(200).json(await getUsersReadBooks(id, offset, limit));
 });
-
-/* /users/me/read
-     -GET skilar síðu af lesnum bókum innskráðs notanda
-     -POST býr til nýjan lestur á bók og skilar */
 
 /* /users/me/read/:id
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
+router.get('/me/read', requireAuthentication, async (req, res) => {
+  const { id } = req.params;
+});
 
 /* /users/me/profile
      -POST setur eða uppfærir mynd fyrir notanda í gegnum Cloudinary og skilar slóð
@@ -205,7 +249,6 @@ router.get('/:id/read', async (req, res) => {
         Ef allt gengur eftir skilar Cloudinary JSON hlut með upplýsingum
         url úr svari er vistað í notenda töflu */
 
-/* þarf að exporta þetta er Route */
 
 // --------------- Export Router ----------------------
 
