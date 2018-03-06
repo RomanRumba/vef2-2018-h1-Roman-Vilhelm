@@ -35,7 +35,7 @@ async function validateBookInsertInput({
   if (!title || title.length < 1) {
     errors.push({ field: 'title', message: 'title is a required field' });
   }
-  if (await bookTitleExists()) {
+  if (await bookTitleExists(title)) {
     errors.push({ field: 'title', message: 'title already exists' });
   }
   // disable hér eslint því því líkar ekki við isNaN
@@ -52,7 +52,44 @@ async function validateBookInsertInput({
     (isbn13 > 0 || isNaN(pageCount) || !Number.isInteger(parseFloat(pageCount, 10)))) { // eslint-disable-line
     errors.push({ field: 'pageCount', message: 'pageCount must be a positive integer' });
   }
-  if (typeof langage !== 'undefined' && (!language || language.length !== 2)) {
+  if (typeof language !== 'undefined' && (!language || language.length !== 2)) {
+    errors.push({ field: 'language', message: 'language has to be exactly 2 characters' });
+  }
+  return errors;
+}
+
+async function validateBookUpdateInput(id, {
+  title,
+  isbn13,
+  category,
+  pageCount,
+  language,
+} = {}) {
+  const errors = [];
+  // ef title er defined, en er tómur
+  if (typeof title !== 'undefined' && title.length < 1) {
+    errors.push({ field: 'title', message: 'title is a required field' });
+  }
+  // title er tekinn, en er ekki title bókarinnar sem er uppfærð
+  if ((await bookTitleExists(title)) && ((await getBook(id)).title !== title)) {
+    errors.push({ field: 'title', message: 'title already exists' });
+  }
+  // disable hér eslint því því líkar ekki við isNaN
+  if (typeof isbn13 !== 'undefined' &&
+    (isbn13.length !== 13 || isNaN(isbn13) || !Number.isInteger(parseFloat(isbn13, 10)))) { // eslint-disable-line
+    errors.push({ field: 'isbn13', message: 'isbn13 must be an integer of length 13' });
+  }
+  if (typeof category !== 'undefined' && !category) {
+    errors.push({ field: 'category', message: 'category must not be empty or null' });
+  } else if (!(await categoryExists(category))) {
+    errors.push({ field: 'category', message: 'category does not exist' });
+  }
+  // disable hér eslint því því líkar ekki við isNaN
+  if (typeof pageCount !== 'undefined' &&
+    (isbn13 > 0 || isNaN(pageCount) || !Number.isInteger(parseFloat(pageCount, 10)))) { // eslint-disable-line
+    errors.push({ field: 'pageCount', message: 'pageCount must be a positive integer' });
+  }
+  if (typeof language !== 'undefined' && (!language || language.length !== 2)) {
     errors.push({ field: 'language', message: 'language has to be exactly 2 characters' });
   }
   return errors;
@@ -142,46 +179,6 @@ router.get('/books/:id', async (req, res) => {
   res.status(200).json(data);
 });
 
-
-async function validateBookUpdateInput(id, {
-  title,
-  isbn13,
-  category,
-  pageCount,
-  language,
-} = {}) {
-  const errors = [];
-  // ef title er defined, en er tómur
-  if (typeof title !== 'undefined' && title.length < 1) {
-    errors.push({ field: 'title', message: 'title is a required field' });
-  }
-  // console.log(id, title, (await getBook(id)));
-  // title er tekinn, en er ekki title bókarinnar sem er uppfærð
-  if (await bookTitleExists(title) && await getBook(id).title != title) {
-    errors.push({ field: 'title', message: 'title already exists' });
-  }
-  // disable hér eslint því því líkar ekki við isNaN
-  if (typeof isbn13 !== 'undefined' &&
-    (isbn13.length !== 13 || isNaN(isbn13) || !Number.isInteger(parseFloat(isbn13, 10)))) { // eslint-disable-line
-    errors.push({ field: 'isbn13', message: 'isbn13 must be an integer of length 13' });
-  }
-  if (typeof category !== 'undefined' && !category) {
-    errors.push({ field: 'category', message: 'category must not be empty or null' });
-  } else if (!(await categoryExists(category))) {
-    errors.push({ field: 'category', message: 'category does not exist' });
-  }
-  // disable hér eslint því því líkar ekki við isNaN
-  if (typeof pageCount !== 'undefined' &&
-    (isbn13 > 0 || isNaN(pageCount) || !Number.isInteger(parseFloat(pageCount, 10)))) { // eslint-disable-line
-    errors.push({ field: 'pageCount', message: 'pageCount must be a positive integer' });
-  }
-  console.log(language, typeof language !== 'undefined');
-  if (typeof language !== 'undefined' && (!language || language.length !== 2)) {
-    errors.push({ field: 'language', message: 'language has to be exactly 2 characters' });
-  }
-  return errors;
-}
-
 router.post('/books/:id', async (req, res) => {
   const id = parseFloat(req.params.id, 10);
 
@@ -233,7 +230,11 @@ router.post('/books/:id', async (req, res) => {
     language,
     category,
   });
-  res.status(204).json(data);
+  res.status(200).json(data);
+});
+
+router.post('users/me/profile', (req, res) => {
+  
 });
 
 module.exports = router;

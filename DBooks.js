@@ -91,7 +91,7 @@ async function createBook({
   const result = await client.query(`
     INSERT INTO books(title,author,description,isbn10,isbn13,published,pagecount,language,category) 
     VALUES($1, $2, $3, $4, $5, $6, $7, $8, $9) 
-    RETURNING title,author,description,isbn10,isbn13,published,pagecount,language,category `, [
+    RETURNING id,title,author,description,isbn10,isbn13,published,pagecount,language,category `, [
     xss(title),
     xss(author),
     xss(description),
@@ -217,8 +217,9 @@ async function updateBook(id, {
     published = $6,
     pagecount = $7,
     language = $8,
-    category = $9,
-    WHERE id = $10`, [
+    category = $9
+    WHERE id = $10
+    RETURNING title, author, description, isbn10, isbn13, published, pagecount, language, category`, [
     xss(title),
     xss(author),
     xss(description),
@@ -231,6 +232,7 @@ async function updateBook(id, {
     xss(id),
   ]);
   await client.end();
+  console.log(result.rows);
   return result.rowCount === 1 ? result.rows[0] : null;
 }
 

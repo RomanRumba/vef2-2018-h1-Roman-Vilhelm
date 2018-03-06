@@ -26,10 +26,11 @@ CREATE TABLE books(
 	language char(2)
 );
 CREATE TABLE booksRead(
+	id SERIAL PRIMARY KEY,
 	userID INT REFERENCES users(id),
 	bookID INT REFERENCES books(id),
 	rating INT NOT NULL,
 	review TEXT,
-	PRIMARY KEY(userID, bookID)
+	unique(userID, bookID)
 );
 
