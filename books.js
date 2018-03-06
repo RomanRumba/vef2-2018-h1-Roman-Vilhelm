@@ -27,8 +27,11 @@ async function validateBookInput({
   title,
   isbn13,
   category,
-}) {
+} = {}) {
   const errors = [];
+  if (!title || title.length < 1) {
+    errors.push({ field: 'title', message: 'title is a required field' });
+  }
   if (bookExists) {
     errors.push({ field: 'title', message: 'title already exists' });
   }

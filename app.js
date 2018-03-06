@@ -43,7 +43,7 @@ const {
   JWT_SECRET: jwtSecret, // sótt úr .env skali
   /* !!!!!!!!!! NOTICE ÞEGAR ÞAÐ ÞARF AÐ KOMA ÞESSU Á HEROKU ÞARF AÐ STILLA ÞESSA BREYTUR !!!!! */
   // sótt úr .env skjali ef ekki skilgreind þá default 20 sem er 20 seconds
-  TOKEN_LIFETIME: tokenLifetime = 99999999,
+  TOKEN_LIFETIME: tokenLifetime = 20,
 } = process.env;
 
 /* Ef það er ekki til dulkóðun fyrir upplýsingar þá er drept á vefþjónustuni */
