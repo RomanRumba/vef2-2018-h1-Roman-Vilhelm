@@ -6,6 +6,7 @@ const passport = require('passport');
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary');
+const fs = require('fs');
 
 const {
   PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
@@ -248,8 +249,11 @@ router.delete('/me/read', requireAuthentication, async (req, res) => {
         url úr svari er vistað í notenda töflu */
 
 async function uploadToCloudinary(imgPath) {
+  console.log('test', imgPath);
   cloudinary.uploader.upload(imgPath, (result) => {
     console.log(result);
+    console.log(`${result.public_id}.${result.format}`);
+    const result = await updateImgPath(req.user.id, imgPath);
   });
 }
 
@@ -257,17 +261,17 @@ async function uploadImage(img) {
   console.log('from user', img);
 
   const imgPath = `img/temp_${img.name}`;
+  await img.mv(imgPath);
+  await uploadToCloudinary(imgPath);
+  /*
   img.mv(imgPath, async (err) => {
     if (err) {
       console.log(err);
     }
-    uploadToCloudinary(imgPath);
+    await uploadToCloudinary(imgPath);
   });
-
-  cloudinary.uploader.upload(imgPath, (result) => {
-    console.log('from cloudinary', result);
-    console.log(`${result.public_id}.${result.format}`);
-  });
+    */
+  await fs.unlink(imgPath);
 }
 
 router.post('/me/profile', requireAuthentication, async (req, res) => {
