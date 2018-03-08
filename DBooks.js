@@ -275,6 +275,29 @@ async function bookIdExists(id) {
   return result.rowCount > 0;
 }
 
+/**
+ * Has user read the book.
+ *
+ * @param {int} userId - id of user
+ * @param {int} bookId - id of book
+ *
+ * @returns {Promise} Promise representing a boolean representing whether the user has read the book
+ */
+async function hasReadBook(userId, bookId) {
+  const client = new Client({ connectionString });
+  await client.connect();
+  const result = await client.query(`
+  SELECT id
+  FROM booksRead
+  WHERE userID = $1
+  AND bookID = $2`, [
+    xss(userId),
+    xss(bookId),
+  ]);
+  await client.end();
+  return result.rowCount > 0;
+}
+
 module.exports = {
   categoryExists,
   createCategory,
@@ -286,4 +309,5 @@ module.exports = {
   updateBook,
   bookTitleExists,
   bookIdExists,
+  hasReadBook,
 };
