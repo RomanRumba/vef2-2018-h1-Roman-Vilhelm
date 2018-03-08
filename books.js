@@ -106,7 +106,7 @@ router.get('/categories', async (req, res) => {
   res.status(200).json(data);
 });
 
-router.post('/categories', async (req, res) => {
+router.post('/categories', requireAuthentication, async (req, res) => {
   const { name } = req.body;
   const data = await createCategory(name);
   res.status(201).json(data);
@@ -150,7 +150,7 @@ router.get('/books', async (req, res) => {
   res.status(200).json(result);
 });
 
-router.post('/books', async (req, res) => {
+router.post('/books', requireAuthentication, async (req, res) => {
   const book = req.body;
   const errors = await validateBookInsertInput(book);
   if (errors.length > 0) {
@@ -169,11 +169,11 @@ router.get('/books/:id', async (req, res) => {
   const id = parseFloat(req.params.id, 10);
 
   // disable hér eslint því því líkar ekki við isNaN
-  if (isNaN(id) || !Number.isInteger(id) || id <= 0) { // eslint-disable-line
+  if (!checkValidID(req.params.id)) {
     res.status(400).json([{ field: 'id', message: 'Id must be a positive integer number' }]);
     return;
   }
-  if (!await bookIdExists(id)) { // eslint-disable-line
+  if (!(await bookIdExists(id))) {
     res.status(404).json([{ field: 'id', message: 'Id not found' }]);
     return;
   }
@@ -182,7 +182,7 @@ router.get('/books/:id', async (req, res) => {
   res.status(200).json(data);
 });
 
-router.post('/books/:id', async (req, res) => {
+router.post('/books/:id', requireAuthentication, async (req, res) => {
   const id = parseFloat(req.params.id, 10);
 
   const originalBook = await getBook(id);
@@ -199,11 +199,11 @@ router.post('/books/:id', async (req, res) => {
   } = req.body;
 
   // disable hér eslint því því líkar ekki við isNaN
-  if (isNaN(id) || !Number.isInteger(id) || id <= 0) { // eslint-disable-line
+  if (!checkValidID(req.params.id)) {
     res.status(400).json([{ field: 'id', message: 'Id must be a positive integer number' }]);
     return;
   }
-  if (!await bookIdExists(id)) {
+  if (!(await bookIdExists(id))) {
     res.status(404).json([{ field: 'id', message: 'Id not found' }]);
     return;
   }
