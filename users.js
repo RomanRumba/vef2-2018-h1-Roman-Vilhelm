@@ -20,6 +20,8 @@ const {
   readBook,
   hasReadBook,
   updateImgPath,
+  deleteReadBook,
+  readBookEntryExists,
 } = require('./DUsers');
 
 const {
@@ -109,6 +111,17 @@ async function getUsersReadBooks(id, limit, offset) {
   return result;
 }
 
+/* Notkun : checkValidID(id)
+   Fyrir  : id er heiltala stærri en 0
+   Eftir  : skilar satt ef talan er lögleg annars ósatt */
+function checkValidID(id) {
+  const parsedID = parseFloat(id, 10);
+  // disable hér eslint því því líkar ekki við isNaN
+  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID <= 0) { // eslint-disable-line
+    return false;
+  }
+  return true;
+}
 
 
 /* -------------------------------------------------
@@ -185,12 +198,12 @@ router.get('/me/read', requireAuthentication, async (req, res) => {
      -POST býr til nýjan lestur á bók og skilar */
 router.post('/me/read', requireAuthentication, async (req, res) => {
   const { bookId, bookRating, review } = req.body;
-  const parsedBookID = parseFloat(bookId, 10);
   const parsedRating = parseFloat(bookRating, 10);
-  // disable hér eslint því því líkar ekki við isNaN
-  if (isNaN(parsedBookID) || !Number.isInteger(parsedBookID) || parsedBookID <= 0) { // eslint-disable-line
+
+  if (!checkValidID(bookId)) { // eslint-disable-line
     return res.status(400).json({ error: 'Book ID has to be a  number bigger than 0' });
   }
+
   const book = await getBook(bookId);
   if (!book) {
     return res.status(404).json({ error: 'Book not found' });
@@ -199,7 +212,7 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
   if (userReadBook) {
     return res.status(400).json({ error: 'You have already Read this Book' });
   }
-  if (isNaN(parsedRating) || !Number.isInteger(parsedRating) || parsedRating < 0 || parsedRating >= 5 ) { // eslint-disable-line
+  if (isNaN(parsedRating) || !Number.isInteger(parsedRating) || parsedRating < 0 || parsedRating > 5 ) { // eslint-disable-line
     return res.status(400).json({ error: 'Rating has to be a number between 1 and 5' });
   }
   const userRead = await readBook(req.user.id, bookId, bookRating, review);
@@ -228,8 +241,7 @@ router.get('/:id', async (req, res) => {
      -GET skilar síðu af lesnum bókum notanda */
 router.get('/:id/read', async (req, res) => {
   const { id } = req.params;
-  const parsedID = parseFloat(id, 10);
-  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID < 1) { // eslint-disable-line
+  if (!checkValidID(id)) {
     return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
   }
   const user = await getUserById(id);
@@ -244,13 +256,16 @@ router.get('/:id/read', async (req, res) => {
 
 /* /users/me/read/:id
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
-router.delete('/me/read', requireAuthentication, async (req, res) => {
+router.delete('/me/read/:id', requireAuthentication, async (req, res) => {
   const { id } = req.params;
-  const parsedID = parseFloat(id, 10);
-  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID < 1) { // eslint-disable-line
+  if (!checkValidID(id)) { // eslint-disable-line
     return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
   }
-
+  if (!(await readBookEntryExists(id))) {
+    return res.status(400).json({ error: 'No such read Exists' });
+  }
+  await deleteReadBook(id);
+  return res.status(204).json();
 });
 
 /* /users/me/profile

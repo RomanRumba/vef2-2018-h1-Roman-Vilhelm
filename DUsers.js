@@ -170,11 +170,12 @@ async function deleteReadBook(id) {
   await client.connect();
   const result = await client.query(`
     DELETE FROM booksRead
-    WHERE id = $1`, [
+    WHERE id = $1
+    RETURNING id`, [
     xss(id),
   ]);
   await client.end();
-  return result.rows;
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 /* /users/me/profile
