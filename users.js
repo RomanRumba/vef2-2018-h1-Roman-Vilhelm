@@ -265,10 +265,24 @@ router.delete('/me/read', requireAuthentication, async (req, res) => {
         Ef allt gengur eftir skilar Cloudinary JSON hlut með upplýsingum
         url úr svari er vistað í notenda töflu */
 
+async function uploadToCloudinary(imgPath) {
+  cloudinary.uploader.upload(imgPath, (result) => {
+    console.log(result);
+  });
+}
 
 async function uploadImage(img) {
   console.log('from user', img);
-  cloudinary.uploader.upload(img, (result) => {
+
+  const imgPath = `img/temp_${img.name}`;
+  img.mv(imgPath, async (err) => {
+    if (err) {
+      console.log(err);
+    }
+    uploadToCloudinary(imgPath);
+  });
+
+  cloudinary.uploader.upload(imgPath, (result) => {
     console.log('from cloudinary', result);
     console.log(`${result.public_id}.${result.format}`);
   });
