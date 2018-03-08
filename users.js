@@ -2,7 +2,6 @@
    ------------------Requires START ----------------
    ------------------------------------------------- */
 
-const passport = require('passport');
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary');
@@ -25,6 +24,11 @@ const {
 } = require('./DUsers');
 
 const {
+  requireAuthentication,
+  checkValidID,
+} = require('./commonFunctions');
+
+const {
   getBook,
 } = require('./DBooks');
 
@@ -38,31 +42,6 @@ router.use(fileUpload());
 /* -------------------------------------------------
    ------- FUNCTION DECLERATION START --------------
    ------------------------------------------------- */
-
-/* þarf að sjá um að gefa tokens til notendans */
-/* Notkun : requireAuthentication(req, res, next)
-   Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
-             okkur aðgang að upplýsingum um HTTP request frá client.
-            -res er skrifanlegur straumur sem sendur verður til clients.
-            -next er næsti middleware i keðjuni.
-   Eftir  : athugar hvort aðili er skráður inn ef hann er skráður inn þá er kallað
-            á næsta fall i middleware keðjuni annars það er skilað json string með villu */
-function requireAuthentication(req, res, next) {
-  return passport.authenticate(
-    'jwt',
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        const error = info.name === 'TokenExpiredError' ? 'expired token' : 'invalid token';
-        return res.status(401).json({ error });
-      }
-      req.user = user;
-      next();
-    }) (req, res, next);
-}
 
 /* Notkun : validatePassAndName(password , name)
    Fyrir  : password er strengur sem verður að vera amk 6 stafir
@@ -87,7 +66,7 @@ function validatePassAndName(password, name) {
             limit er heiltala stærri en 0
             offset er heiltala
    Eftir  : skilar fylki af json obj af 10 lestum bókum notandans
-            ásmat slóð til að fá næstu 10  */
+            ásmat slóð til að fá næstu 10 og fara á seinustu 10  */
 async function getUsersReadBooks(id, limit, offset) {
   const userBooks = await getReadBooks(id, limit, offset);
   const result = {
@@ -111,34 +90,9 @@ async function getUsersReadBooks(id, limit, offset) {
   return result;
 }
 
-/* Notkun : checkValidID(id)
-   Fyrir  : id er heiltala stærri en 0
-   Eftir  : skilar satt ef talan er lögleg annars ósatt */
-function checkValidID(id) {
-  const parsedID = parseFloat(id, 10);
-  // disable hér eslint því því líkar ekki við isNaN
-  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID <= 0) { // eslint-disable-line
-    return false;
-  }
-  return true;
-}
-
-
 /* -------------------------------------------------
    ------- FUNCTION DECLERATION END ----------------
    ------------------------------------------------- */
-
-/* Fyrir notanda sem ekki er skráður er inn skal vera hægt að:
-   -Skoða allar bækur og flokka
-   -Leita að bókum */
-
-/* Fyrir innskráðan notanda skal einnig vera hægt að:
-   -Uppfæra upplýsingar um sjálfan sig
-   -Skrá nýja bók
-   -Uppfæra bók
-   -Skrá nýjan flokk
-   -Skrá lestur á bók
-   -Eyða lestur á bók */
 
 /* /users
      -GET skilar síðu (sjá að neðan) af notendum
@@ -208,10 +162,12 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
   if (!book) {
     return res.status(404).json({ error: 'Book not found' });
   }
+
   const userReadBook = await hasReadBook(req.user.id, bookId);
   if (userReadBook) {
     return res.status(400).json({ error: 'You have already Read this Book' });
   }
+
   if (isNaN(parsedRating) || !Number.isInteger(parsedRating) || parsedRating < 0 || parsedRating > 5 ) { // eslint-disable-line
     return res.status(400).json({ error: 'Rating has to be a number between 1 and 5' });
   }
@@ -224,8 +180,7 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
      Lykilorðs hash skal ekki vera sýnilegt */
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
-  const parsedID = parseFloat(id, 10);
-  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID < 1) { // eslint-disable-line
+  if (!checkValidID(id)) {
     return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
   }
   const user = await getUserById(id);
@@ -262,7 +217,7 @@ router.delete('/me/read/:id', requireAuthentication, async (req, res) => {
     return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
   }
   if (!(await readBookEntryExists(id))) {
-    return res.status(400).json({ error: 'No such read Exists' });
+    return res.status(404).json({ error: 'No such read Exists' });
   }
   await deleteReadBook(id);
   return res.status(204).json();

@@ -7,7 +7,10 @@ const {
   HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1
 } = process.env;
 
-
+const {
+  requireAuthentication,
+  checkValidID,
+} = require('./commonFunctions');
 /* Þegar gögn eru sótt, búin til eða uppfærð þarf að athuga hvort allt sé gilt
 og einingar séu til og skila viðeigandi status kóðum/villuskilaboðum ef svo er ekki. */
 
