@@ -2,7 +2,6 @@
    ------------------Requires START ----------------
    ------------------------------------------------- */
 
-const passport = require('passport');
 const express = require('express');
 const fileUpload = require('express-fileupload');
 const cloudinary = require('cloudinary');
@@ -18,10 +17,17 @@ const {
   getUserById,
   updateUser,
   getReadBooks,
-  hasReadBook,
   readBook,
+  hasReadBook,
   updateImgPath,
+  deleteReadBook,
+  readBookEntryExists,
 } = require('./DUsers');
+
+const {
+  requireAuthentication,
+  checkValidID,
+} = require('./commonFunctions');
 
 const {
   getBook,
@@ -37,31 +43,6 @@ router.use(fileUpload());
 /* -------------------------------------------------
    ------- FUNCTION DECLERATION START --------------
    ------------------------------------------------- */
-
-/* þarf að sjá um að gefa tokens til notendans */
-/* Notkun : requireAuthentication(req, res, next)
-   Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
-             okkur aðgang að upplýsingum um HTTP request frá client.
-            -res er skrifanlegur straumur sem sendur verður til clients.
-            -next er næsti middleware i keðjuni.
-   Eftir  : athugar hvort aðili er skráður inn ef hann er skráður inn þá er kallað
-            á næsta fall i middleware keðjuni annars það er skilað json string með villu */
-function requireAuthentication(req, res, next) {
-  return passport.authenticate(
-    'jwt',
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        const error = info.name === 'TokenExpiredError' ? 'expired token' : 'invalid token';
-        return res.status(401).json({ error });
-      }
-      req.user = user;
-      next();
-    }) (req, res, next);
-}
 
 /* Notkun : validatePassAndName(password , name)
    Fyrir  : password er strengur sem verður að vera amk 6 stafir
@@ -86,9 +67,9 @@ function validatePassAndName(password, name) {
             limit er heiltala stærri en 0
             offset er heiltala
    Eftir  : skilar fylki af json obj af 10 lestum bókum notandans
-            ásmat slóð til að fá næstu 10  */
+            ásmat slóð til að fá næstu 10 og fara á seinustu 10  */
 async function getUsersReadBooks(id, limit, offset) {
-  const userBooks = await getReadBooks(id, offset, limit);
+  const userBooks = await getReadBooks(id, limit, offset);
   const result = {
     _links: {
       self: {
@@ -113,18 +94,6 @@ async function getUsersReadBooks(id, limit, offset) {
 /* -------------------------------------------------
    ------- FUNCTION DECLERATION END ----------------
    ------------------------------------------------- */
-
-/* Fyrir notanda sem ekki er skráður er inn skal vera hægt að:
-   -Skoða allar bækur og flokka
-   -Leita að bókum */
-
-/* Fyrir innskráðan notanda skal einnig vera hægt að:
-   -Uppfæra upplýsingar um sjálfan sig
-   -Skrá nýja bók
-   -Uppfæra bók
-   -Skrá nýjan flokk
-   -Skrá lestur á bók
-   -Eyða lestur á bók */
 
 /* /users
      -GET skilar síðu (sjá að neðan) af notendum
@@ -184,6 +153,12 @@ router.get('/me/read', requireAuthentication, async (req, res) => {
      -POST býr til nýjan lestur á bók og skilar */
 router.post('/me/read', requireAuthentication, async (req, res) => {
   const { bookId, bookRating, review } = req.body;
+  const parsedRating = parseFloat(bookRating, 10);
+
+  if (!checkValidID(bookId)) { // eslint-disable-line
+    return res.status(400).json({ error: 'Book ID has to be a  number bigger than 0' });
+  }
+
   const book = await getBook(bookId);
   if (!book) {
     return res.status(404).json({ error: 'Book not found' });
@@ -194,10 +169,9 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
     return res.status(400).json({ error: 'You have already Read this Book' });
   }
 
-  if (bookRating < 1 || bookRating > 5) {
+  if (isNaN(parsedRating) || !Number.isInteger(parsedRating) || parsedRating < 0 || parsedRating > 5 ) { // eslint-disable-line
     return res.status(400).json({ error: 'Rating has to be a number between 1 and 5' });
   }
-
   const userRead = await readBook(req.user.id, bookId, bookRating, review);
   return res.status(200).json(userRead);
 });
@@ -207,6 +181,9 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
      Lykilorðs hash skal ekki vera sýnilegt */
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
+  if (!checkValidID(id)) {
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
   const user = await getUserById(id);
   // ef user id er ekki til þá skila villu
   if (!user) {
@@ -220,6 +197,9 @@ router.get('/:id', async (req, res) => {
      -GET skilar síðu af lesnum bókum notanda */
 router.get('/:id/read', async (req, res) => {
   const { id } = req.params;
+  if (!checkValidID(id)) {
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
   const user = await getUserById(id);
   // ef user id er ekki til þá skila villu
   if (!user) {
@@ -232,8 +212,16 @@ router.get('/:id/read', async (req, res) => {
 
 /* /users/me/read/:id
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
-router.delete('/me/read', requireAuthentication, async (req, res) => {
+router.delete('/me/read/:id', requireAuthentication, async (req, res) => {
   const { id } = req.params;
+  if (!checkValidID(id)) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
+  if (!(await readBookEntryExists(id))) {
+    return res.status(404).json({ error: 'No such read Exists' });
+  }
+  await deleteReadBook(id);
+  return res.status(204).json();
 });
 
 /* /users/me/profile
