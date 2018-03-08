@@ -17,8 +17,8 @@ const {
   getUserById,
   updateUser,
   getReadBooks,
-  hasReadBook,
   readBook,
+  hasReadBook,
   updateImgPath,
 } = require('./DUsers');
 
@@ -87,7 +87,7 @@ function validatePassAndName(password, name) {
    Eftir  : skilar fylki af json obj af 10 lestum bókum notandans
             ásmat slóð til að fá næstu 10  */
 async function getUsersReadBooks(id, limit, offset) {
-  const userBooks = await getReadBooks(id, offset, limit);
+  const userBooks = await getReadBooks(id, limit, offset);
   const result = {
     _links: {
       self: {
@@ -108,6 +108,8 @@ async function getUsersReadBooks(id, limit, offset) {
   }
   return result;
 }
+
+
 
 /* -------------------------------------------------
    ------- FUNCTION DECLERATION END ----------------
@@ -183,20 +185,23 @@ router.get('/me/read', requireAuthentication, async (req, res) => {
      -POST býr til nýjan lestur á bók og skilar */
 router.post('/me/read', requireAuthentication, async (req, res) => {
   const { bookId, bookRating, review } = req.body;
+  const parsedBookID = parseFloat(bookId, 10);
+  const parsedRating = parseFloat(bookRating, 10);
+  // disable hér eslint því því líkar ekki við isNaN
+  if (isNaN(parsedBookID) || !Number.isInteger(parsedBookID) || parsedBookID <= 0) { // eslint-disable-line
+    return res.status(400).json({ error: 'Book ID has to be a  number bigger than 0' });
+  }
   const book = await getBook(bookId);
   if (!book) {
     return res.status(404).json({ error: 'Book not found' });
   }
-
   const userReadBook = await hasReadBook(req.user.id, bookId);
   if (userReadBook) {
     return res.status(400).json({ error: 'You have already Read this Book' });
   }
-
-  if (bookRating < 1 || bookRating > 5) {
+  if (isNaN(parsedRating) || !Number.isInteger(parsedRating) || parsedRating < 0 || parsedRating >= 5 ) { // eslint-disable-line
     return res.status(400).json({ error: 'Rating has to be a number between 1 and 5' });
   }
-
   const userRead = await readBook(req.user.id, bookId, bookRating, review);
   return res.status(200).json(userRead);
 });
@@ -206,6 +211,10 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
      Lykilorðs hash skal ekki vera sýnilegt */
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
+  const parsedID = parseFloat(id, 10);
+  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID < 1) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
   const user = await getUserById(id);
   // ef user id er ekki til þá skila villu
   if (!user) {
@@ -219,6 +228,10 @@ router.get('/:id', async (req, res) => {
      -GET skilar síðu af lesnum bókum notanda */
 router.get('/:id/read', async (req, res) => {
   const { id } = req.params;
+  const parsedID = parseFloat(id, 10);
+  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID < 1) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
   const user = await getUserById(id);
   // ef user id er ekki til þá skila villu
   if (!user) {
@@ -233,6 +246,11 @@ router.get('/:id/read', async (req, res) => {
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
 router.delete('/me/read', requireAuthentication, async (req, res) => {
   const { id } = req.params;
+  const parsedID = parseFloat(id, 10);
+  if (isNaN(parsedID) || !Number.isInteger(parsedID) || parsedID < 1) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
+
 });
 
 /* /users/me/profile
