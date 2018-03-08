@@ -119,7 +119,7 @@ router.post('/categories', async (req, res) => {
      -GET skilar síðu af bókum sem uppfylla leitarskilyrði, sjá að neðan */
 
 router.get('/books', async (req, res) => {
-  const { search = null, offset = 0, limit = 10 } = req.query;
+  const { search = '', offset = 0, limit = 10 } = req.query;
   let data;
   if (search) {
     data = await bookSearch(search, offset, limit);
@@ -129,14 +129,14 @@ router.get('/books', async (req, res) => {
   const result = {
     _links: {
       self: {
-        href: `http://${host}:${port}/books?search=${search}&offset=${offset}&limit=${limit}`,
+        href: `http://${host}:${port}/books?search=${search}search=${search}&offset=${offset}&limit=${limit}`,
       },
     },
     items: data,
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/books?search=${search}&offset=${offset - limit}&limit=${limit}`,
+      href: `http://${host}:${port}/books?search=${search}&offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
     };
   }
   if (data.length >= limit) {
@@ -231,10 +231,6 @@ router.post('/books/:id', async (req, res) => {
     category,
   });
   res.status(200).json(data);
-});
-
-router.post('users/me/profile', (req, res) => {
-  
 });
 
 module.exports = router;

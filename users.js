@@ -17,7 +17,7 @@ const {
   getReadBooks,
   readBook,
   // deleteReadBook,
-  // updateImgPath,
+  updateImgPath,
   // createUser,
   // userExists,
   // getUserByUsername,
@@ -107,7 +107,7 @@ async function getUsersReadBooks(id, limit, offset) {
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/users/${id}/read?offset=${offset - limit}&limit=${limit}`,
+      href: `http://${host}:${port}/users/${id}/read?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
     };
   }
   if (userBooks.length >= limit) {
@@ -249,6 +249,39 @@ router.get('/me/read', requireAuthentication, async (req, res) => {
         Ef allt gengur eftir skilar Cloudinary JSON hlut með upplýsingum
         url úr svari er vistað í notenda töflu */
 
+const fileUpload = require('express-fileupload');
+const cloudinary = require('cloudinary');
+
+router.use(fileUpload());
+
+async function uploadImage(img) {
+  console.log('from user', img);
+  cloudinary.uploader.upload(img, (result) => {
+    console.log('from cloudinary', result);
+    console.log(`${result.public_id}.${result.format}`);
+  });
+}
+
+router.post('/me/profile', requireAuthentication, async (req, res) => {
+  const img = req.files.image;
+  await uploadImage(img);
+  /*
+  if (img) {
+    const imgPath = `img/${img.name}`;
+    img.mv(imgPath, async (err) => {
+      if (err) {
+        res.status(500).send(`error: ${err}`);
+      } else {
+        const result = await updateImgPath(req.user.id, imgPath);
+        res.status(200).send(result);
+      }
+    });
+  }
+  else {
+    res.status(400).send('no image received');
+  }
+    */
+});
 
 // --------------- Export Router ----------------------
 

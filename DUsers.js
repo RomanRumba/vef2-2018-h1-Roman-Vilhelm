@@ -206,13 +206,14 @@ async function updateImgPath(id, imgPath) {
   await client.connect();
   const result = await client.query(`
     UPDATE users SET 
-    imgPath = $1,
-    WHERE id = $2`, [
+    imgPath = $1
+    WHERE id = $2
+    RETURNING imgPath`, [
     xss(imgPath),
     xss(id),
   ]);
   await client.end();
-  return result.rows;
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 // authenication

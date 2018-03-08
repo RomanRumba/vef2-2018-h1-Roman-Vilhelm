@@ -138,7 +138,7 @@ async function getBooks(offset = 0, limit = 10) {
  *
  * @returns {Promise} Promise representing an array of offset and limited book objects
  */
-async function bookSearch(search, offset = 0, limit = 10) {
+async function bookSearch(search = '', offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
@@ -232,7 +232,6 @@ async function updateBook(id, {
     xss(id),
   ]);
   await client.end();
-  console.log(result.rows);
   return result.rowCount === 1 ? result.rows[0] : null;
 }
 
