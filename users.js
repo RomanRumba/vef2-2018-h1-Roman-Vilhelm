@@ -4,6 +4,8 @@
 
 const passport = require('passport');
 const express = require('express');
+const fileUpload = require('express-fileupload');
+const cloudinary = require('cloudinary');
 
 const {
   PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
@@ -17,6 +19,7 @@ const {
   getReadBooks,
   hasReadBook,
   readBook,
+  updateImgPath,
 } = require('./DUsers');
 
 const {
@@ -24,6 +27,7 @@ const {
 } = require('./DBooks');
 
 const router = express.Router();
+router.use(fileUpload());
 
 /* -------------------------------------------------
    ------------------Requires END ------------------
@@ -94,7 +98,7 @@ async function getUsersReadBooks(id, limit, offset) {
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/users/${id}/read?offset=${offset - limit}&limit=${limit}`,
+      href: `http://${host}:${port}/users/${id}/read?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
     };
   }
   if (userBooks.length >= limit) {
@@ -243,6 +247,35 @@ router.delete('/me/read', requireAuthentication, async (req, res) => {
         Ef allt gengur eftir skilar Cloudinary JSON hlut með upplýsingum
         url úr svari er vistað í notenda töflu */
 
+
+async function uploadImage(img) {
+  console.log('from user', img);
+  cloudinary.uploader.upload(img, (result) => {
+    console.log('from cloudinary', result);
+    console.log(`${result.public_id}.${result.format}`);
+  });
+}
+
+router.post('/me/profile', requireAuthentication, async (req, res) => {
+  const img = req.files.image;
+  await uploadImage(img);
+  /*
+  if (img) {
+    const imgPath = `img/${img.name}`;
+    img.mv(imgPath, async (err) => {
+      if (err) {
+        res.status(500).send(`error: ${err}`);
+      } else {
+        const result = await updateImgPath(req.user.id, imgPath);
+        res.status(200).send(result);
+      }
+    });
+  }
+  else {
+    res.status(400).send('no image received');
+  }
+    */
+});
 
 // --------------- Export Router ----------------------
 

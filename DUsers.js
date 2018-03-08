@@ -110,11 +110,11 @@ async function getReadBooks(id, offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
-    SELECT id, title, author, description, isbn10, isbn13, published, pagecount, language, category 
+    SELECT books.id, title, author, description, isbn10, isbn13, published, pagecount, language, category 
     FROM books
     JOIN booksRead ON books.id = booksRead.bookID
     WHERE booksRead.userID = $1
-    ORDER BY id
+    ORDER BY books.id
     OFFSET $2
     LIMIT $3`, [
     xss(id),
@@ -145,7 +145,7 @@ async function readBook(userId, bookId, rating, review = null) {
   const result = await client.query(`
     INSERT INTO booksRead(userID, bookID, rating, review)
     VALUES($1, $2, $3, $4)
-    RETURNING userID, bookID, rating, review`, [
+    RETURNING id, userID, bookID, rating, review`, [
     xss(userId),
     xss(bookId),
     xss(rating),
@@ -161,21 +161,17 @@ async function readBook(userId, bookId, rating, review = null) {
 /**
  * Read all books read by user.
  *
- * @param {int} id - id of user
- * @param {int} offset -offset for query
- * @param {int} limit - limit for query
+ * @param {int} id - id of read book entry
  *
  * @returns {Promise} Promise representing an array of offset and limited book objects
  */
-async function deleteReadBook(userID, bookID) {
+async function deleteReadBook(id) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
     DELETE FROM booksRead
-    WHERE userID = $1
-    AND bookID = $2`, [
-    xss(userID),
-    xss(bookID),
+    WHERE id = $1`, [
+    xss(id),
   ]);
   await client.end();
   return result.rows;
@@ -206,13 +202,14 @@ async function updateImgPath(id, imgPath) {
   await client.connect();
   const result = await client.query(`
     UPDATE users SET 
-    imgPath = $1,
-    WHERE id = $2`, [
+    imgPath = $1
+    WHERE id = $2
+    RETURNING imgPath`, [
     xss(imgPath),
     xss(id),
   ]);
   await client.end();
-  return result.rows;
+  return result.rowCount === 1 ? result.rows[0] : null;
 }
 
 // authenication
