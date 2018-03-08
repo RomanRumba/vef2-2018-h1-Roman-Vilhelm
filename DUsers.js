@@ -110,11 +110,11 @@ async function getReadBooks(id, offset = 0, limit = 10) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
-    SELECT id, title, author, description, isbn10, isbn13, published, pagecount, language, category 
+    SELECT books.id, title, author, description, isbn10, isbn13, published, pagecount, language, category 
     FROM books
     JOIN booksRead ON books.id = booksRead.bookID
     WHERE booksRead.userID = $1
-    ORDER BY id
+    ORDER BY books.id
     OFFSET $2
     LIMIT $3`, [
     xss(id),
