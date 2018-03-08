@@ -15,25 +15,12 @@ const {
   getUserById,
   updateUser,
   getReadBooks,
+  hasReadBook,
   readBook,
-  // deleteReadBook,
-  // updateImgPath,
-  // createUser,
-  // userExists,
-  // getUserByUsername,
 } = require('./DUsers');
 
 const {
-  // categoryExists,
-  // createCategory,
-  // getCategories,
-  // createBook,
-  // getBooks,
   getBook,
-  // bookSearch,
-  // updateBook,
-  // bookTitleExists,
-  // bookIdExists,
 } = require('./DBooks');
 
 const router = express.Router();
@@ -196,9 +183,16 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
   if (!book) {
     return res.status(404).json({ error: 'Book not found' });
   }
+
+  const userReadBook = await hasReadBook(req.user.id, bookId);
+  if (userReadBook) {
+    return res.status(400).json({ error: 'You have already Read this Book' });
+  }
+
   if (bookRating < 1 || bookRating > 5) {
     return res.status(400).json({ error: 'Rating has to be a number between 1 and 5' });
   }
+
   const userRead = await readBook(req.user.id, bookId, bookRating, review);
   return res.status(200).json(userRead);
 });
@@ -233,7 +227,7 @@ router.get('/:id/read', async (req, res) => {
 
 /* /users/me/read/:id
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
-router.get('/me/read', requireAuthentication, async (req, res) => {
+router.delete('/me/read', requireAuthentication, async (req, res) => {
   const { id } = req.params;
 });
 

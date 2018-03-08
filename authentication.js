@@ -7,12 +7,6 @@ const express = require('express');
 const bcrypt = require('bcrypt');
 
 const {
-  // getUsers,
-  // getUserById,
-  // updateUser,
-  // getReadBooks,
-  // deleteReadBook,
-  // updateImgPath,
   createUser,
   userExists,
   getUserByUsername,
