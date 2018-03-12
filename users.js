@@ -2,10 +2,17 @@
    ------------------Requires START ----------------
    ------------------------------------------------- */
 const express = require('express');
+const multer = require('multer');
+const cloudinary = require('cloudinary');
+
+const uploads = multer({ dest: './temp' }); // temp staður fyrir allar myndir
 
 const {
   PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
   HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1
+  CLOUDINARY_CLOUD,
+  CLOUDINARY_API_KEY,
+  CLOUDINARY_API_SECRET,
 } = process.env;
 
 const {
@@ -29,7 +36,20 @@ const {
   checkValidID,
 } = require('./commonFunctions');
 
+cloudinary.config({
+  cloud_name: CLOUDINARY_CLOUD,
+  api_key: CLOUDINARY_API_KEY,
+  api_secret: CLOUDINARY_API_SECRET,
+});
+
 const router = express.Router();
+
+/* if (!CLOUDINARY_CLOUD || !CLOUDINARY_API_KEY || !CLOUDINARY_API_SECRET) {
+  console.log(CLOUDINARY_CLOUD);
+  console.log(CLOUDINARY_API_KEY);
+  console.log(CLOUDINARY_API_SECRET);
+  console.warn('Missing cloudinary config, uploading images will not work');
+} */
 
 /* -------------------------------------------------
    ------------------Requires END ------------------
@@ -207,7 +227,7 @@ router.get('/:id/read', async (req, res) => {
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
 router.delete('/me/read/:id', requireAuthentication, async (req, res) => {
   const { id } = req.params;
-  if (!checkValidID(id)) { // eslint-disable-line
+  if (!checkValidID(id)) {
     return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
   }
   if (!(await readBookEntryExists(id))) {
@@ -216,6 +236,36 @@ router.delete('/me/read/:id', requireAuthentication, async (req, res) => {
   await deleteReadBook(id);
   return res.status(204).json();
 });
+
+/* Notkun : upload(req, res, next)
+   Fyrir  : kijka á hin req, res og next
+   Efrir  : yfirfærir gögnin á cloudanary og vistar slóð á myndi
+            i gagnagrunu ef slóð á myndini er lögleg */
+async function upload(req, res, next) {
+  const { file: { path } = {} } = req; // sótt slóð úr myndini
+
+  // slóð á mynd er ólögleg
+  if (!path) {
+    return res.status(400).json({ error: 'Gat ekki lesið mynd' });
+  }
+  // þar sem niðurstaðan er geymd úr myndna yfirfærslu
+  let uploadPic = null;
+  // reynt er að yfirfæra myndina á cloudanary ef það virkar ekki þá er skilað villu
+  try {
+    uploadPic = await cloudinary.v2.uploader.upload(path);
+  } catch (error) {
+    console.error('Unable to upload file to cloudinary:', path);
+    return next(error);
+  }
+
+  // secure_url er attribute i cloudanary ekki breyta es-lint sér
+  // þetta sem eitthva sem við getum lagað en i raun ekki
+  const { secure_url } = uploadPic; // eslint-disable-line
+  const resultImg = await updateImgPath(req.user.id, secure_url);
+  return res.status(200).json(resultImg);
+}
+
+router.post('/me/profile', requireAuthentication, uploads.single('image'), upload);
 
 // --------------- Export Router ----------------------
 
