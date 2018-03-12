@@ -13,15 +13,7 @@ const books = require('./books');
 const users = require('./users');
 
 const {
-  // getUsers,
   getUserById,
-  // updateUser,
-  // getReadBooks,
-  // deleteReadBook,
-  // updateImgPath,
-  // createUser,
-  // userExists,
-  // getUserByUsername,
 } = require('./DUsers');
 
 /* -------------------------------------------------
@@ -56,7 +48,7 @@ app.use('/users', users);
 
 // valkostir sem hægt er að taka frá rótini
 app.get('/', (req, res) => {
-  res.json({
+  res.status(200).json({
     login: '/login',
     register: '/register',
     lookForBooks: '/books',

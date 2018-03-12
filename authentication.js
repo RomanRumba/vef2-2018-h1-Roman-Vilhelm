@@ -73,7 +73,12 @@ function validateUser(username, password) {
 /* /register
      POST býr til notanda og skilar án lykilorðs hash */
 router.post('/register', async (req, res) => {
-  const { username, password, name, imgPath } = req.body;
+  const {
+    username,
+    password,
+    name,
+    imgPath,
+  } = req.body;
   const error = validateUser(username, password);
   if (error.length > 0) {
     return res.status(400).json(error);
@@ -81,7 +86,7 @@ router.post('/register', async (req, res) => {
   // chekka ef notendanafnið er til
   const user = await userExists(username);
   if (user) {
-    return res.status(401).json({ error: 'This username is already taken please choose another one' });
+    return res.status(400).json({ error: 'This username is already taken please choose another one' });
   }
   // búum til dulkóðað password
   const hashedPassword = await bcrypt.hash(password, 11);
@@ -94,7 +99,6 @@ router.post('/register', async (req, res) => {
   };
   const data = await createUser(usrInfo);
   const output = {
-    Message: 'User was created!',
     Id: data.id,
     Username: data.username,
     Name: data.name !== '' ? data.name : null,
@@ -112,9 +116,9 @@ router.post('/login', async (req, res) => {
       að leita af notenda með nafni mun skila alltaf 1 eða ekkert */
   const user = await getUserByUsername(username);
   /* ef það var skilað tómu rows þá er notandanafnið ekki til
-        og það er skilað json með error ásamt 401 status kóða */
+        og það er skilað json með error ásamt 400 status kóða */
   if (!user) {
-    return res.status(401).json({ error: 'No such user' });
+    return res.status(400).json({ error: 'No such user' });
   }
   /* kallað á comparePasswords sem mun auðkenna hvort passwordið sem
        sem slegið var inn er löglegt */
@@ -125,8 +129,8 @@ router.post('/login', async (req, res) => {
     const token = jwt.sign(payload, jwtOptions.secretOrKey, tokenOptions);
     return res.json({ token });
   }
-  // ef notandi er ekki til þá er skilað json með error ásamt 401 status kóða
-  return res.status(401).json({ error: 'Invalid password' });
+  // ef notandi er ekki til þá er skilað json með error ásamt 400 status kóða
+  return res.status(400).json({ error: 'Invalid password' });
 });
 
 /* -------------------------------------------------

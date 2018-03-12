@@ -34,8 +34,9 @@ function requireAuthentication(req, res, next) {
         return res.status(401).json({ error });
       }
       req.user = user;
-      next();
-    }) (req, res, next); // eslint-disable-line
+      return next();
+    },
+  )(req, res, next);
 }
 
 /* Notkun : checkValidID(id)

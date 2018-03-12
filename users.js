@@ -127,7 +127,7 @@ router.get('/', async (req, res) => {
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/users?offset=${offset - limit}&limit=${limit}`,
+      href: `http://${host}:${port}/users?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
     };
   }
   if (users.length >= limit) {
@@ -140,9 +140,7 @@ router.get('/', async (req, res) => {
 
 /* /users/me
      -GET skilar innskráðum notanda (þ.e.a.s. þér) */
-router.get('/me', requireAuthentication, async (req, res) => {
-  return res.status(200).json(req.user);
-});
+router.get('/me', requireAuthentication, async (req, res) => res.status(200).json(req.user));
 
 /* /users/me
      -PATCH uppfærir sendar upplýsingar um notanda fyrir utan notendanafn,
@@ -220,7 +218,7 @@ router.get('/:id/read', async (req, res) => {
   }
   // ef komin hingað þá þyðir það að user id er til þá getum haldið áfram
   const { offset = 0, limit = 10 } = req.query;
-  res.status(200).json(await getUsersReadBooks(id, offset, limit));
+  return res.status(200).json(await getUsersReadBooks(id, offset, limit));
 });
 
 /* /users/me/read/:id
