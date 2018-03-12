@@ -1,8 +1,6 @@
 /* -------------------------------------------------
    ------------------Requires START ----------------
    ------------------------------------------------- */
-
-const passport = require('passport');
 const express = require('express');
 
 const {
@@ -26,8 +24,12 @@ const {
   getBook,
 } = require('./DBooks');
 
+const {
+  requireAuthentication,
+  checkValidID,
+} = require('./commonFunctions');
+
 const router = express.Router();
-router.use(fileUpload());
 
 /* -------------------------------------------------
    ------------------Requires END ------------------
@@ -36,31 +38,6 @@ router.use(fileUpload());
 /* -------------------------------------------------
    ------- FUNCTION DECLERATION START --------------
    ------------------------------------------------- */
-
-/* þarf að sjá um að gefa tokens til notendans */
-/* Notkun : requireAuthentication(req, res, next)
-   Fyrir  : Fyrir  : -req er lesanlegur straumur sem gefur
-             okkur aðgang að upplýsingum um HTTP request frá client.
-            -res er skrifanlegur straumur sem sendur verður til clients.
-            -next er næsti middleware i keðjuni.
-   Eftir  : athugar hvort aðili er skráður inn ef hann er skráður inn þá er kallað
-            á næsta fall i middleware keðjuni annars það er skilað json string með villu */
-function requireAuthentication(req, res, next) {
-  return passport.authenticate(
-    'jwt',
-    { session: false },
-    (err, user, info) => {
-      if (err) {
-        return next(err);
-      }
-      if (!user) {
-        const error = info.name === 'TokenExpiredError' ? 'expired token' : 'invalid token';
-        return res.status(401).json({ error });
-      }
-      req.user = user;
-      next();
-    }) (req, res, next);
-}
 
 /* Notkun : validatePassAndName(password , name)
    Fyrir  : password er strengur sem verður að vera amk 6 stafir
@@ -183,6 +160,9 @@ router.get('/me/read', requireAuthentication, async (req, res) => {
      -POST býr til nýjan lestur á bók og skilar */
 router.post('/me/read', requireAuthentication, async (req, res) => {
   const { bookId, bookRating, review } = req.body;
+  if (!checkValidID(bookId)) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
   const book = await getBook(bookId);
   if (!book) {
     return res.status(404).json({ error: 'Book not found' });
@@ -206,6 +186,9 @@ router.post('/me/read', requireAuthentication, async (req, res) => {
      Lykilorðs hash skal ekki vera sýnilegt */
 router.get('/:id', async (req, res) => {
   const { id } = req.params;
+  if (!checkValidID(id)) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
   const user = await getUserById(id);
   // ef user id er ekki til þá skila villu
   if (!user) {
@@ -219,6 +202,9 @@ router.get('/:id', async (req, res) => {
      -GET skilar síðu af lesnum bókum notanda */
 router.get('/:id/read', async (req, res) => {
   const { id } = req.params;
+  if (!checkValidID(id)) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
   const user = await getUserById(id);
   // ef user id er ekki til þá skila villu
   if (!user) {
@@ -242,7 +228,6 @@ router.delete('/me/read/:id', requireAuthentication, async (req, res) => {
   await deleteReadBook(id);
   return res.status(204).json();
 });
-
 
 // --------------- Export Router ----------------------
 
