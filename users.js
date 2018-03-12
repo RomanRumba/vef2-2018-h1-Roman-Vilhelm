@@ -90,18 +90,6 @@ async function getUsersReadBooks(id, limit, offset) {
    ------- FUNCTION DECLERATION END ----------------
    ------------------------------------------------- */
 
-/* Fyrir notanda sem ekki er skráður er inn skal vera hægt að:
-   -Skoða allar bækur og flokka
-   -Leita að bókum */
-
-/* Fyrir innskráðan notanda skal einnig vera hægt að:
-   -Uppfæra upplýsingar um sjálfan sig
-   -Skrá nýja bók
-   -Uppfæra bók
-   -Skrá nýjan flokk
-   -Skrá lestur á bók
-   -Eyða lestur á bók */
-
 /* /users
      -GET skilar síðu (sjá að neðan) af notendum
      -Lykilorðs hash skal ekki vera sýnilegt */
