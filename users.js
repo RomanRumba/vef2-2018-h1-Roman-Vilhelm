@@ -18,6 +18,8 @@ const {
   hasReadBook,
   readBook,
   updateImgPath,
+  deleteReadBook,
+  readBookEntryExists,
 } = require('./DUsers');
 
 const {
@@ -229,8 +231,16 @@ router.get('/:id/read', async (req, res) => {
 
 /* /users/me/read/:id
       -DELETE eyðir lestri bókar fyrir innskráðann notanda */
-router.delete('/me/read', requireAuthentication, async (req, res) => {
+router.delete('/me/read/:id', requireAuthentication, async (req, res) => {
   const { id } = req.params;
+  if (!checkValidID(id)) { // eslint-disable-line
+    return res.status(400).json({ error: 'ID has to be a  number bigger than 0' });
+  }
+  if (!(await readBookEntryExists(id))) {
+    return res.status(404).json({ error: 'No such read Exists' });
+  }
+  await deleteReadBook(id);
+  return res.status(204).json();
 });
 
 
