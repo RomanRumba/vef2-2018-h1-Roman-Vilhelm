@@ -8,8 +8,6 @@ const cloudinary = require('cloudinary');
 const uploads = multer({ dest: './temp' }); // temp staður fyrir allar myndir
 
 const {
-  PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
-  HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1
   CLOUDINARY_CLOUD,
   CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET,
@@ -88,19 +86,19 @@ async function getUsersReadBooks(id, limit, offset) {
   const result = {
     _links: {
       self: {
-        href: `http://${host}:${port}/users/${id}/read?offset=${offset}&limit=${limit}`,
+        href: `/users/${id}/read?offset=${offset}&limit=${limit}`,
       },
     },
     items: userBooks,
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/users/${id}/read?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
+      href: `/users/${id}/read?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
     };
   }
   if (userBooks.length >= limit) {
     result._links.next = {
-      href: `http://${host}:${port}/users/${id}/read?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+      href: `/users/${id}/read?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
     };
   }
   return result;
@@ -120,19 +118,19 @@ router.get('/', async (req, res) => {
   const result = {
     _links: {
       self: {
-        href: `http://${host}:${port}/users?offset=${offset}&limit=${limit}`,
+        href: `/users?offset=${offset}&limit=${limit}`,
       },
     },
     items: users,
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/users?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
+      href: `/users?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
     };
   }
   if (users.length >= limit) {
     result._links.next = {
-      href: `http://${host}:${port}/users?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+      href: `/users?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
     };
   }
   res.status(200).json(result);

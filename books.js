@@ -3,11 +3,6 @@ const express = require('express');
 const router = express.Router();
 
 const {
-  PORT: port = 3000, // sótt úr .env skjali ef ekki skilgreind þá default 3000
-  HOST: host = '127.0.0.1', // sótt úr .env skjali  ef ekki til þá notar 127.0.0.1
-} = process.env;
-
-const {
   requireAuthentication,
   checkValidID,
 } = require('./commonFunctions');
@@ -132,19 +127,19 @@ router.get('/books', async (req, res) => {
   const result = {
     _links: {
       self: {
-        href: `http://${host}:${port}/books?search=${search}search=${search}&offset=${offset}&limit=${limit}`,
+        href: `/books?search=${search}&offset=${offset}&limit=${limit}`,
       },
     },
     items: data,
   };
   if (offset > 0) {
     result._links.prev = {
-      href: `http://${host}:${port}/books?search=${search}&offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
+      href: `/books?search=${search}&offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
     };
   }
   if (data.length >= limit) {
     result._links.next = {
-      href: `http://${host}:${port}/books?search=${search}&offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+      href: `/books?search=${search}&offset=${Number(offset) + Number(limit)}&limit=${limit}`,
     };
   }
   res.status(200).json(result);
