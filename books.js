@@ -97,8 +97,27 @@ async function validateBookUpdateInput(id, {
 -GET skilar síðu af flokkum
 -POST býr til nýjan flokk og skilar */
 router.get('/categories', async (req, res) => {
+  const { offset = 0, limit = 10 } = req.query;
   const data = await getCategories();
-  res.status(200).json(data);
+  const result = {
+    _links: {
+      self: {
+        href: `/categories?offset=${offset}&limit=${limit}`,
+      },
+    },
+    items: data,
+  };
+  if (offset > 0) {
+    result._links.prev = {
+      href: `/categories?offset=${Math.max(offset - limit, 0)}&limit=${limit}`,
+    };
+  }
+  if (data.length >= limit) {
+    result._links.next = {
+      href: `/categories?offset=${Number(offset) + Number(limit)}&limit=${limit}`,
+    };
+  }
+  res.status(200).json(result);
 });
 
 router.post('/categories', requireAuthentication, async (req, res) => {
