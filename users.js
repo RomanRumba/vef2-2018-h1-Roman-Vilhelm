@@ -4,6 +4,7 @@
 const express = require('express');
 const multer = require('multer');
 const cloudinary = require('cloudinary');
+const bcrypt = require('bcrypt');
 
 const uploads = multer({ dest: './temp' }); // temp staður fyrir allar myndir
 
@@ -149,7 +150,9 @@ router.patch('/me', requireAuthentication, async (req, res) => {
   if (errors.length > 0) {
     return res.status(400).json(errors);
   }
-  const result = await updateUser(req.user.id, { name, password });
+  // búum til dulkóðað password
+  const hashedPassword = await bcrypt.hash(password, 11);
+  const result = await updateUser(req.user.id, { name, hashedPassword });
   return res.status(200).json(result);
 });
 
