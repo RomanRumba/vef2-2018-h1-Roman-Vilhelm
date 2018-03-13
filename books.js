@@ -165,11 +165,11 @@ router.get('/books/:id', async (req, res) => {
 
   // disable hér eslint því því líkar ekki við isNaN
   if (!checkValidID(req.params.id)) {
-    res.status(400).json({ message: 'Id must be a positive integer number' });
+    res.status(400).json({ error: 'Id must be a positive integer number' });
     return;
   }
   if (!(await bookIdExists(id))) {
-    res.status(404).json({ message: 'Id not found' });
+    res.status(404).json({ error: 'Id not found' });
     return;
   }
 
@@ -195,11 +195,11 @@ router.post('/books/:id', requireAuthentication, async (req, res) => {
 
   // disable hér eslint því því líkar ekki við isNaN
   if (!checkValidID(req.params.id)) {
-    res.status(400).json({ message: 'Id must be a positive integer number' });
+    res.status(400).json({ error: 'Id must be a positive integer number' });
     return;
   }
   if (!(await bookIdExists(id))) {
-    res.status(404).json({ message: 'Id not found' });
+    res.status(404).json({ error: 'Id not found' });
     return;
   }
   const errors = await validateBookUpdateInput(id, {
