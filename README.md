@@ -59,3 +59,26 @@
   - ATH ! svo þetta virki það þarf að bæta Token i hausin 
   - lykill Authorization og gildi bearer xxxx 
   - ATH ! i body á að vera form data með key : image , file value sem er lögleg mynd
+* sækja flokka (GET)
+   - https://mighty-fortress-80354.herokuapp.com/categories
+* skrá nýjan flokk (POST)
+   - https://mighty-fortress-80354.herokuapp.com/categories
+   - með json í body: { "id": "my category" }
+   - þarf authentication
+* sækja bækur (GET)
+   - https://mighty-fortress-80354.herokuapp.com/books
+* leita að bók (GET)
+   - https://mighty-fortress-80354.herokuapp.com/books?search=green
+* sækja ákveðna bók (GET)
+   - https://mighty-fortress-80354.herokuapp.com/books/1
+* skrá nýja bók (POST)
+   - https://mighty-fortress-80354.herokuapp.com/books/
+   - með json í body: { "title":"my new book", "isbn13":"1231231231123", "category":"Horror" }
+   - þætti sem hægt er að srká: title, author, description, isbn10, isbn13, published, pagecount, language, category
+   - þarf authentication
+ * uppfæra bók (PATCH)
+   - https://mighty-fortress-80354.herokuapp.com/books/1
+   - með json í body: { "pagecount": 50, "language": "is" }
+   - þættir sem hægt er að uppfæra: title, author, description, isbn10, isbn13, published, pagecount, language, category
+   - þarf authentication
+
