@@ -152,7 +152,11 @@ router.patch('/me', requireAuthentication, async (req, res) => {
   }
   // búum til dulkóðað password
   const hashedPassword = await bcrypt.hash(password, 11);
-  const result = await updateUser(req.user.id, { name, hashedPassword });
+  const updateInfo = {
+    name,
+    password: hashedPassword,
+  };
+  const result = await updateUser(req.user.id, updateInfo);
   return res.status(200).json(result);
 });
 
