@@ -227,7 +227,7 @@ async function updateBook(id, {
     xss(isbn10),
     xss(isbn13),
     xss(published),
-    xss(pagecount),
+    xss(pagecount) ? xss(pagecount) : null,
     xss(language),
     xss(category),
     xss(id),

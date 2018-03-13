@@ -26,7 +26,7 @@ async function validateBookInsertInput({
   title,
   isbn13,
   category,
-  pageCount,
+  pagecount,
   language,
 } = {}) {
   const errors = [];
@@ -46,9 +46,9 @@ async function validateBookInsertInput({
     errors.push({ field: 'category', message: 'category does not exist' });
   }
   // disable hér eslint því því líkar ekki við isNaN
-  if (typeof pageCount !== 'undefined' &&
-    (isbn13 > 0 || isNaN(pageCount) || !Number.isInteger(parseFloat(pageCount, 10)))) { // eslint-disable-line
-    errors.push({ field: 'pageCount', message: 'pageCount must be a positive integer' });
+  if (typeof pagecount !== 'undefined' &&
+    (pagecount < 0 || isNaN(pagecount) || !Number.isInteger(parseFloat(pagecount, 10)))) { // eslint-disable-line
+    errors.push({ field: 'pagecount', message: 'pagecount must be a positive integer' });
   }
   if (typeof language !== 'undefined' && (!language || language.length !== 2)) {
     errors.push({ field: 'language', message: 'language has to be exactly 2 characters' });
@@ -60,7 +60,7 @@ async function validateBookUpdateInput(id, {
   title,
   isbn13,
   category,
-  pageCount,
+  pagecount,
   language,
 } = {}) {
   const errors = [];
@@ -82,10 +82,10 @@ async function validateBookUpdateInput(id, {
   } else if (!(await categoryExists(category))) {
     errors.push({ field: 'category', message: 'category does not exist' });
   }
-  // disable hér eslint því því líkar ekki við isNaN
-  if (typeof pageCount !== 'undefined' &&
-    (isbn13 > 0 || isNaN(pageCount) || !Number.isInteger(parseFloat(pageCount, 10)))) { // eslint-disable-line
-    errors.push({ field: 'pageCount', message: 'pageCount must be a positive integer' });
+  // disable hér eslint þ
+  if (typeof pagecount !== 'undefined' &&
+    (pagecount < 0 || isNaN(pagecount) || !Number.isInteger(parseFloat(pagecount, 10)))) { // eslint-disable-line
+    errors.push({ field: 'pagecount', message: 'pagecount must be a positive integer' });
   }
   if (typeof language !== 'undefined' && (!language || language.length !== 2)) {
     errors.push({ field: 'language', message: 'language has to be exactly 2 characters' });
@@ -181,9 +181,8 @@ router.get('/books/:id', async (req, res) => {
   res.status(200).json(data);
 });
 
-router.post('/books/:id', requireAuthentication, async (req, res) => {
+router.patch('/books/:id', requireAuthentication, async (req, res) => {
   const id = parseFloat(req.params.id, 10);
-
   const originalBook = await getBook(id);
   const {
     title = originalBook.title,
