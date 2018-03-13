@@ -19,7 +19,8 @@ async function createCategory(name) {
   await client.connect();
   const result = await client.query(`
     INSERT INTO categories(id)
-    VALUES($1)`, [
+    VALUES($1)
+    RETURNING id`, [
     xss(name),
   ]);
   await client.end();
