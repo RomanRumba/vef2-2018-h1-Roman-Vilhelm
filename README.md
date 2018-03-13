@@ -26,19 +26,36 @@
   - http://mighty-fortress-80354.herokuapp.com/login
   - Body skal hafa JSON(application/json) = {"username":"roman","password":"abcabc"}
   - það er skilað Token sem það þarf að halda utan um
-* Skoða alla notendur
+* Skoða alla notendur (GET)
   - http://mighty-fortress-80354.herokuapp.com/users
-* Skoða ákveðin aðila
+* Skoða ákveðin aðila (GET)
   - http://mighty-fortress-80354.herokuapp.com/users/:id
   - þar sem id er heiltala > 0
-* Skoða aðilan sem er skráður inn
+* Skoða aðilan sem á token (GET)
   - http://mighty-fortress-80354.herokuapp.com/users/me
   - ATH ! svo þetta virki það þarf að bæta Token i hausin 
   - lykill Authorization og gildi bearer xxxx 
-
-
-* Upplýsingar um hvernig setja skuli upp verkefnið
-  - Hvernig gagnagrunnur og töflur eru settar upp
-  - Hvernig gögnum er komið inn í töflur
-* Dæmi um köll í vefþjónustu
-* Nöfn og notendanöfn allra í hóp
+* Upfærar upplýsingar aðila sem á token (PATCH)
+  - http://mighty-fortress-80354.herokuapp.com/users/me/
+  - ATH ! svo þetta virki það þarf að bæta Token i hausin 
+  - lykill Authorization og gildi bearer xxxx 
+  - Body skal hafa JSON(application/json) = {"name":"roman","password":"abcabc"}
+* Ná i allar bækur aðila sem á token (GET)
+  - http://mighty-fortress-80354.herokuapp.com/users/me/read
+  - ATH ! svo þetta virki það þarf að bæta Token i hausin 
+  - lykill Authorization og gildi bearer xxxx 
+* Skrá bók á aðilann sem á token (POST) 
+  - ATH ! svo þetta virki það þarf að bæta Token i hausin 
+  - lykill Authorization og gildi bearer xxxx 
+  - Body skal hafa JSON(application/json) = { "bookId":"1", "bookRating":"1", "review":"it was meh"}
+* Ná i bækur sem ákveðin aðili hefur lesið (GET)
+  - http://mighty-fortress-80354.herokuapp.com/users/:id/read
+* Eyða lestum bók af aðila sem á token (DELETE)
+  - http://mighty-fortress-80354.herokuapp.com/users/me/read/:id
+  - ATH ! svo þetta virki það þarf að bæta Token i hausin 
+  - lykill Authorization og gildi bearer xxxx 
+* Uppfæra prófil mynd á aðila sem á Token (POST)
+  - http://mighty-fortress-80354.herokuapp.com/users/me/profile
+  - ATH ! svo þetta virki það þarf að bæta Token i hausin 
+  - lykill Authorization og gildi bearer xxxx 
+  - ATH ! i body á að vera form data með key : image , file value sem er lögleg mynd
