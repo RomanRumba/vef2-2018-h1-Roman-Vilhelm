@@ -37,7 +37,7 @@ async function validateBookInsertInput({
     errors.push({ field: 'title', message: 'title already exists' });
   }
   // disable hér eslint því því líkar ekki við isNaN
-  if (isbn13.length !== 13 || isNaN(isbn13) || !Number.isInteger(parseFloat(isbn13, 10))) { // eslint-disable-line
+  if (!isbn13 || isbn13.length !== 13 || isNaN(isbn13) || !Number.isInteger(parseFloat(isbn13, 10))) { // eslint-disable-line
     errors.push({ field: 'isbn13', message: 'isbn13 must be an integer of length 13' });
   }
   if (!category) {
@@ -102,8 +102,12 @@ router.get('/categories', async (req, res) => {
 });
 
 router.post('/categories', requireAuthentication, async (req, res) => {
-  const { name } = req.body;
-  const data = await createCategory(name);
+  const { id } = req.body;
+  if (await categoryExists(id)) {
+    res.status(400).json({ error: 'category already exists' });
+    return;
+  }
+  const data = await createCategory(id);
   res.status(201).json(data);
 });
 

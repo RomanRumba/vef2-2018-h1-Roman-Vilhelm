@@ -14,14 +14,14 @@ const connectionString = process.env.DATABASE_URL;
  *
  * @returns {Promise} Promise representing the object result of creating the category
  */
-async function createCategory(name) {
+async function createCategory(id) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
     INSERT INTO categories(id)
     VALUES($1)
     RETURNING id`, [
-    xss(name),
+    xss(id),
   ]);
   await client.end();
   return result.rowCount === 1 ? result.rows[0] : null;
@@ -47,14 +47,14 @@ async function getCategories() {
  *
  * @returns {Promise} Promise representing a boolean representing whether the category exists
  */
-async function categoryExists(category) {
+async function categoryExists(id) {
   const client = new Client({ connectionString });
   await client.connect();
   const result = await client.query(`
     SELECT id
     FROM categories
     WHERE id = $1`, [
-    xss(category),
+    xss(id),
   ]);
   await client.end();
   return result.rowCount > 0;
