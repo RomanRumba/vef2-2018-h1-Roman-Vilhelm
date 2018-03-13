@@ -18,7 +18,7 @@
 * npm start 
 
 # Dæmi um köll
-## her er notuð heroku slóð
+## hér er notuð heroku slóð
 * Skrá aðila (POST) 
   - http://mighty-fortress-80354.herokuapp.com/register 
   - Body skal hafa JSON(application/json) = {"username":"roman","password":"abcabc"}
